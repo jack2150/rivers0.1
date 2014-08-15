@@ -1,0 +1,478 @@
+# django classes
+from django.test import TestCase
+from rivers2.settings import FILES
+
+# test classes
+from __init__ import OpenPosCSV
+
+
+#noinspection PyPep8Naming
+class TestOpenCSV(TestCase):
+    def setUp(self):
+        print '=' * 100
+        print "%s: currently run: %s" % (self.__class__.__name__, self._testMethodName)
+        print '-' * 100 + '\n'
+
+        test_file = FILES['tos_positions'] + r'2014-08-01-PositionStatement.csv'
+        self.open_csv = OpenPosCSV(fname=test_file)
+
+    def tearDown(self):
+        print '\n' + '=' * 100 + '\n\n'
+
+        del self.open_csv
+
+    def test_read_lines_from_file(self):
+        """
+        Test read lines from file with test file
+        """
+        lines = self.open_csv.read_lines_from_file()
+
+        print 'lines type: %s' % type(lines)
+        print 'lines length: %d\n' % len(lines)
+        print 'first 5 rows in lines:'
+
+        for line in lines[:5]:
+            print '\t"' + line + '"'
+
+        self.assertTrue(len(lines))
+        self.assertEqual(type(lines), list)
+
+    def test_replace_dash_inside_quote(self):
+        """
+        Test replace dash inside quote
+        example "$1,254.00" become $1254.00
+        """
+        line = 'OVERNIGHT FUTURES BP,"$1,653.36"'
+        result = self.open_csv.replace_dash_inside_quote(line)
+
+        print 'line: %s' % line
+        print 'result: %s' % result
+
+        self.assertNotIn('"', result)
+
+    def test_split_lines_with_dash(self):
+        """
+        Test split line using dash into list of items
+        """
+        line = 'TSLA,,,,,,5.18,-.12,1.29,-1.06,+4.46%,$8.00,$8.00,($250.00)'
+        result = self.open_csv.split_lines_with_dash(line)
+
+        print 'line: %s' % line
+        print 'result: %s' % result
+        print 'type: %s' % type(result)
+        print 'length: %d' % len(result)
+
+        self.assertEqual(len(result), 14)
+        self.assertEqual(type(result), list)
+
+    def test_is_positions(self):
+        """
+        Test using list decide it is positions or not
+        """
+        items = [
+            ['TSLA', '', '', '', '', '', '5.18', '-.12', '1.29',
+             '-1.06', '+4.46%', '$8.00', '$8.00', '($250.00)'],
+            ['TSLA', '', '', '', '', '', '5.18', '-.12', '1.29',
+             '-1.06', '+4.46%', '$8.00', '$8.00'],
+            ['Instrument', '', '', '', '', '', '5.18', '-.12', '1.29',
+             '-1.06', '+4.46%', '', '', '($250.00)'],
+        ]
+
+        for key, item in enumerate(items):
+            result = self.open_csv.is_positions(item)
+
+            print 'items: %s' % item
+            print 'result: %s\n' % result
+
+            if key == 0:
+                self.assertTrue(result)
+            else:
+                self.assertFalse(result)
+
+    def test_get_first_items(self):
+        """
+        Test get first item in a list
+        """
+        items = ['TSLA', '', '', '', '', '', '5.18', '-.12', '1.29']
+        result = self.open_csv.get_first_items(items)
+
+        print 'items: %s' % items
+        print 'result: %s' % result
+
+        self.assertEqual(result, 'TSLA')
+        self.assertEqual(type(result), str)
+
+    def test_is_instrument(self):
+        """
+        Test check the lines is instrument using first item
+        """
+        items = [
+            'TSLA',
+            'ISHARES MSCI EAFE ETF',
+            '100 AUG 14 69 CALL'
+        ]
+
+        for key, item in enumerate(items):
+            result = self.open_csv.is_instrument(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), bool)
+
+            if key == 0:
+                self.assertTrue(result)
+            else:
+                self.assertFalse(result)
+
+    def test_is_stock(self):
+        """
+        Test check the lines is stock using first item
+        """
+        items = [
+            'TSLA',
+            'ISHARES MSCI EAFE ETF',
+            '100 AUG 14 69 CALL'
+        ]
+
+        for key, item in enumerate(items):
+            result = self.open_csv.is_stock(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), bool)
+
+            if key == 1:
+                self.assertTrue(result)
+            else:
+                self.assertFalse(result)
+
+    def test_is_options(self):
+        """
+        Test check the lines is options using first item
+        """
+        items = [
+            'TSLA',
+            'ISHARES MSCI EAFE ETF',
+            '100 AUG 14 69 CALL'
+        ]
+
+        for key, item in enumerate(items):
+            result = self.open_csv.is_options(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), bool)
+
+            if key == 2:
+                self.assertTrue(result)
+            else:
+                self.assertFalse(result)
+
+    def test_make_pos_dict(self):
+        """
+        Test make positions dict using list item
+        """
+        items = ['TSLA', '', '', '', '', '', '5.18', '-.12', '1.29',
+                 '-1.06', '+4.46%', '$8.00', '$8.00', '($250.00)']
+        result = self.open_csv.make_pos_dict(items)
+
+        print 'item: %s' % items
+        print 'result:'
+        for k, r in result.items():
+            print '%s: "%s"' % (k, r)
+            self.assertIn(k, self.open_csv.position_columns)
+
+        self.assertEqual(len(result), 14)
+        self.assertEqual(type(result), dict)
+
+    def test_reset_stock_and_options(self):
+        """
+        Test reset that return empty list and dict
+        """
+        stock, options = self.open_csv.reset_stock_and_options()
+
+        print 'stock type: %s' % type(stock)
+        print 'stock length: %s\n' % len(stock)
+
+        self.assertEqual(type(stock), dict)
+        self.assertFalse(len(stock))
+
+        print 'options type: %s' % type(options)
+        print 'options length: %s' % len(options)
+
+        self.assertEqual(type(options), list)
+        self.assertFalse(len(options))
+
+    def test_reset_symbol_and_instrument(self):
+        """
+        Test reset that result str and dict
+        """
+        symbol, instrument = self.open_csv.reset_symbol_and_instrument()
+
+        print 'symbol type: %s' % type(symbol)
+        print 'symbol length: %s\n' % len(symbol)
+
+        self.assertEqual(type(symbol), str)
+        self.assertFalse(len(symbol))
+
+        print 'instrument type: %s' % type(instrument)
+        print 'instrument length: %s' % len(instrument)
+
+        self.assertEqual(type(instrument), dict)
+        self.assertFalse(len(instrument))
+
+    def test_set_pos(self):
+        """
+        Test set positions into class with instrument, stock and options
+        """
+        symbol = 'CELG'
+
+        instrument = {'mark_change': '', 'name': 'CELG', 'pl_open': '($7.50)',
+                      'days': '', 'mark': '', 'vega': '-.25', 'pl_day': '($13.00)',
+                      'delta': '12.41', 'bp_effect': '($150.00)', 'theta': '.00',
+                      'pct_change': '-1.35%', 'quantity': '', 'gamma': '-.54',
+                      'trade_price': ''}
+
+        stock = {'mark_change': '-1.19', 'name': 'CELGENE CORP COM', 'pl_open': '$0.00',
+                 'days': '', 'mark': '87.15', 'vega': '.00', 'pl_day': '$0.00',
+                 'delta': '.00', 'bp_effect': '', 'theta': '.00', 'pct_change': '',
+                 'quantity': '0', 'gamma': '.00', 'trade_price': '.00'}
+
+        options = [{'mark_change': '+.46', 'name': '100 AUG 14 86 PUT', 'pl_open': '$13.50',
+                    'days': '15', 'mark': '1.395', 'vega': '7.02', 'pl_day': '$46.00',
+                    'delta': '-39.37', 'bp_effect': '', 'theta': '-5.72', 'pct_change': '',
+                    'quantity': '+1', 'gamma': '7.94', 'trade_price': '1.26'},
+                   {'mark_change': '+.59', 'name': '100 AUG 14 87.5 PUT', 'pl_open': '($21.00)',
+                    'days': '15', 'mark': '2.05', 'vega': '-7.27', 'pl_day': '($59.00)',
+                    'delta': '51.78', 'bp_effect': '', 'theta': '5.72', 'pct_change': '',
+                    'quantity': '-1', 'gamma': '-8.49', 'trade_price': '1.84'}]
+
+        self.open_csv.set_pos(instrument, stock, options, symbol)
+
+        positions = self.open_csv.positions
+
+        for s, pos in positions.items():
+            print 'symbol: %s' % s
+
+            self.assertEqual(s, symbol)
+            self.assertIn('Instrument', pos.keys())
+            self.assertIn('Stock', pos.keys())
+            self.assertIn('Options', pos.keys())
+
+            for k, p in pos.items():
+                print k, p
+
+                self.assertIn(len(p), (2, 14))
+
+    def test_set_pos_from_lines(self):
+        """
+        Test open pos csv files then get instrument, stock, options
+        and set it into class property
+        """
+        self.open_csv.set_pos_from_lines()
+
+        positions = self.open_csv.positions
+
+        self.assertEqual(len(positions), 20)
+
+        for s, pos in positions.items():
+            print 'symbol: %s' % s
+
+            self.assertIn('Instrument', pos.keys())
+            self.assertIn('Stock', pos.keys())
+            self.assertIn('Options', pos.keys())
+
+            for k, p in pos.items():
+                print k, p
+
+            print ''
+
+    def test_last_five_lines(self):
+        """
+        Test using a list of lines get last 5 items
+        """
+        lines = range(10)
+        result = self.open_csv.last_five_lines(lines)
+
+        print 'lines type: %s' % type(result)
+        print 'lines length: %s' % len(result)
+
+        self.assertEqual(type(result), list)
+        self.assertEqual(len(result), 5)
+
+    def test_is_overall(self):
+        """
+        Test the line is overall or not
+        """
+        items = [
+            ['OVERNIGHT FUTURES BP', '$1873.49'],
+            ['Position Statement for 865073982 () on 8/1/14 04:55:00'],
+            ['BP ADJUSTMENT', '$0.00']
+        ]
+
+        for item in items:
+            result = self.open_csv.is_overall(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            if len(item) == 2:
+                self.assertTrue(result)
+            else:
+                self.assertFalse(result)
+
+    def test_get_overall_data_only(self):
+        """
+        Test return overall data only, do not return columns
+        """
+        items = [
+            ['OVERNIGHT FUTURES BP', '$1873.49'],
+            ['BP ADJUSTMENT', '$0.00']
+        ]
+
+        for item in items:
+            result = self.open_csv.get_overall_data_only(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), str)
+            self.assertEqual(result, item[1])
+
+    def test_make_overall_dict(self):
+        """
+        Test using overall data list and make dict
+        """
+        items = [
+            '$3773.49',
+            '($5609.52)',
+            '$0.00',
+            '$1873.49',
+            '$1873.49'
+        ]
+
+        result = self.open_csv.make_overall_dict(items)
+
+        print 'items: %s\n' % items
+        print 'result:'
+        for k, r in result.items():
+            print k, r
+
+        print ''
+        print 'result length: %d' % len(result)
+        print 'result type: %s' % type(result)
+
+        self.assertEqual(type(result), dict)
+        self.assertEqual(len(result), 5)
+
+        columns_name = [
+            'cash_sweep',
+            'pl_ytd',
+            'bp_adjustment',
+            'futures_bp',
+            'available_dollars'
+        ]
+
+        for name in columns_name:
+            self.assertIn(name, result.keys())
+
+    def test_set_overall(self):
+        """
+        Test set overall into class property
+        """
+        items = ['$3773.49', '($5609.52)', '$0.00', '$1873.49', '$1873.49']
+        self.open_csv.set_overall(items)
+
+        overall = self.open_csv.overall
+
+        print 'overall type: %s' % type(overall)
+        print 'overall length: %d' % len(overall)
+
+        self.assertEqual(type(overall), dict)
+        self.assertEqual(len(overall), 5)
+
+        print '\n' + 'overall dict:'
+        for k, o in overall.items():
+            print '%s: %s' % (k, o)
+
+    def test_set_overall_from_lines(self):
+        """
+        Test open csv files and set overall property
+        """
+        self.open_csv.set_overall_from_lines()
+
+        overall = self.open_csv.overall
+
+        print 'overall type: %s' % type(overall)
+        print 'overall length: %d' % len(overall)
+
+        self.assertEqual(type(overall), dict)
+        self.assertEqual(len(overall), 5)
+
+        print '\n' + 'overall dict:'
+        for k, o in overall.items():
+            print '%s: %s' % (k, o)
+
+    def test_read(self):
+        """
+        Final test, read csv files and return positions and overall dict
+        """
+        positions, overall = self.open_csv.read()
+
+        print 'positions type: %s' % type(positions)
+        print 'positions length: %d\n' % len(positions)
+
+        for s, pos in positions.items():
+            print 'symbol: %s' % s
+
+            self.assertIn('Instrument', pos.keys())
+            self.assertIn('Stock', pos.keys())
+            self.assertIn('Options', pos.keys())
+
+            for k, p in pos.items():
+                print k, p
+
+            print ''
+
+        # overall section
+        print '\n' + 'overall type: %s' % type(overall)
+        print 'overall length: %d' % len(overall)
+
+        self.assertEqual(type(overall), dict)
+        self.assertEqual(len(overall), 5)
+
+        print '\n' + 'overall dict:'
+        for k, o in overall.items():
+            print '%s: %s' % (k, o)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

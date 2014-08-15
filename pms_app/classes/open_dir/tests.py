@@ -1,0 +1,96 @@
+# unit test classes
+from unittest import TestCase
+
+# test classes
+from __init__ import OpenDir
+
+
+#noinspection PyPep8Naming
+class TestOpenDir(TestCase):
+    def setUp(self):
+        """
+        ready up all variables and test class
+        """
+        print '=' * 100
+        print "<%s> currently run: %s" % (self.__class__.__name__, self._testMethodName)
+        print '-' * 100 + '\n'
+
+        self.open_dir = OpenDir()
+
+        self.path = "C:\\Users\\Jack\\PycharmProjects\\rivers2\\" \
+                    "files\\tos.pos\\2014-08-01-PositionStatement.csv"
+
+    def tearDown(self):
+        """
+        remove variables after test
+        """
+        print '\n' + '=' * 100 + '\n\n'
+
+        del self.open_dir, self.path
+
+    def test_get_files_from_folder(self):
+        """
+        Test open folder then get a list of files
+        """
+        files = self.open_dir.get_files_from_folder()
+
+        print 'folder: %s' % self.open_dir.folder
+
+        for k, f in enumerate(files):
+            print k, f
+            self.assertIn('PositionStatement.csv', f)
+            self.assertIn('files/tos.pos', f)
+
+    def test_get_date_from_fpath(self):
+        """
+        Test get date from file path
+        """
+        date = self.open_dir.get_date_from_fpath(path=self.path)
+
+        print 'path: %s' % self.path
+        print 'date: %s' % date
+
+        self.assertEqual(date.count('-'), 2)
+
+    def test_make_dict(self):
+        """
+        Test make dict from file path
+        """
+        file_dict = self.open_dir.make_dict(path=self.path)
+
+        print 'dict date: %s' % file_dict['Date']
+        print 'dict path: %s' % file_dict['Path']
+
+    def test_get_fname_from_path(self):
+        """
+        Test get file name from file path
+        """
+        fname = self.open_dir.get_fname_from_path(path=self.path)
+
+        print 'fname: %s' % fname
+
+    def test_to_list(self):
+        """
+        open dir primary method get files inside tos.pos folder
+        """
+        print 'import dir: \n%s \n' % self.open_dir.folder
+
+        files = self.open_dir.to_list()
+
+        print 'files inside dir:'
+        for f in files:
+            print 'Date: %s, Path: %s' % (f['Date'], f['Path'])
+
+            self.assertIn('PositionStatement.csv', f['Path'])
+
+    def test_to_json(self):
+        """
+        convert open dir property files into json format and ready for use
+        """
+        print 'json format:'
+        json_str = self.open_dir.to_json()
+
+        for json in json_str[1:-1].split(','):
+            print json
+
+        self.assertEqual(type(json_str), str)
