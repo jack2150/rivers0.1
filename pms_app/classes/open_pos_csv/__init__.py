@@ -43,6 +43,16 @@ class OpenPosCSV(object):
         # overall
         self.overall = {}
 
+        # options name
+        self.options_name_columns = [
+            'right',
+            'special',
+            'ex_month',
+            'ex_year',
+            'strike_price',
+            'contract'
+        ]
+
     def read_lines_from_file(self):
         """
         Read line from position file and
@@ -76,7 +86,7 @@ class OpenPosCSV(object):
         return map(lambda x: x.rstrip(), line.split(','))
 
     @classmethod
-    def remove_bracket_symbols(cls, item):
+    def remove_bracket_then_add_negative(cls, item):
         """
         Using input item return no brackets str
         :param item: str
@@ -160,6 +170,62 @@ class OpenPosCSV(object):
 
         return result
 
+    @classmethod
+    def options_is_normal_contract(cls, items):
+        """
+        Check options only have 5 items
+        :param items: str
+        :return: bool
+        """
+        return len(items) == 5
+
+    @classmethod
+    def add_normal_to_options_name(cls, items):
+        """
+        Add item into first key of a list
+        :param items: list
+        """
+        items.insert(1, 'Normal')
+
+    @classmethod
+    def remove_brackets_only(cls, items):
+        """
+        Remove brackets on first item of a list
+        :param items: str
+        :return: str
+        """
+        return items.replace('(', '').replace(')', '')
+
+    def make_options_name_dict(self, items):
+        """
+        Make a dict using options list with column names
+        :type items: object
+        :return: dict
+        """
+        return {c: o for c, o in zip(self.options_name_columns, items)}
+
+    def format_option_contract(self, item):
+        """
+        Get first item and split it into option contract
+        :return: list
+        """
+        item = self.remove_brackets_only(item)
+        items = self.split_str_with_space(item)
+
+        if self.options_is_normal_contract(items):
+            self.add_normal_to_options_name(items)
+
+        options = self.make_options_name_dict(items)
+
+        return options
+
+    def set_options_name_in_items(self, items):
+        """
+        Set first item in list into options name list
+        :param items: list
+        """
+        items[0] = self.format_option_contract(items[0])
+
     def make_pos_dict(self, items):
         """
         Input a list of position items and make a new dict with column names
@@ -189,7 +255,7 @@ class OpenPosCSV(object):
         """
         for key, item in enumerate(items):
             if len(item):
-                item = self.remove_bracket_symbols(item)
+                item = self.remove_bracket_then_add_negative(item)
                 item = self.remove_dollar_symbols(item)
                 item = self.remove_percent_symbols(item)
 
@@ -222,6 +288,15 @@ class OpenPosCSV(object):
                 'Stock': stock,
                 'Options': options
             }
+
+    @classmethod
+    def split_str_with_space(cls, item):
+        """
+        Split str item into list
+        :param item: str
+        :return: list
+        """
+        return item.split(' ')
 
     def set_pos_from_lines(self):
         """
@@ -269,6 +344,8 @@ class OpenPosCSV(object):
 
                 elif self.is_options(first_item):
                     # set options for positions
+                    self.set_options_name_in_items(items)
+
                     options.append(self.make_pos_dict(items))
 
         return self.positions
@@ -303,7 +380,7 @@ class OpenPosCSV(object):
         :type item : str
         :rtype : float
         """
-        item = self.remove_bracket_symbols(item)
+        item = self.remove_bracket_then_add_negative(item)
         item = self.remove_dollar_symbols(item)
 
         return float(item)

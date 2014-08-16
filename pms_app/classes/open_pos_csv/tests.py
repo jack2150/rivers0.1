@@ -1,5 +1,4 @@
 # django classes
-from unittest import TestCase
 from django.test import TestCase
 from rivers2.settings import FILES
 
@@ -66,12 +65,12 @@ class TestOpenPosCSV(TestCase):
         self.assertEqual(len(result), 14)
         self.assertEqual(type(result), list)
 
-    def test_remove_bracket_symbols(self):
+    def test_remove_bracket_then_add_negative(self):
         """
-        Test remove brackets '()' on str item
+        Test remove brackets '()' on str item then add negative
         """
         item = '($5609.52)'
-        result = self.open_csv.remove_bracket_symbols(item)
+        result = self.open_csv.remove_bracket_then_add_negative(item)
 
         print 'item: %s' % item
         print 'result: %s' % result
@@ -209,6 +208,134 @@ class TestOpenPosCSV(TestCase):
                 self.assertTrue(result)
             else:
                 self.assertFalse(result)
+
+    def test_split_str_with_space(self):
+        """
+        Test split str with space
+        """
+        items = [
+            '100 AUG 14 67.5 CALL',
+            '100 (Weeklys) AUG1 14 50 PUT',
+            '100 AUG 14 26.5 CALL'
+        ]
+
+        for item in items:
+            result = self.open_csv.split_str_with_space(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), list)
+            self.assertIn(len(result), (5, 6))
+
+    def test_options_is_normal_contract(self):
+        """
+        Test check options is normal contract or not
+        """
+        items = [
+            ['100', 'AUG', '14', '67.5', 'CALL'],
+            ['100', 'Weeklys', 'AUG1', '14', '50', 'PUT']
+        ]
+
+        for key, item in enumerate(items):
+            result = self.open_csv.options_is_normal_contract(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), bool)
+
+            if key == 0:
+                self.assertTrue(result)
+            else:
+                self.assertFalse(result)
+
+    def test_add_normal_to_options_name(self):
+        """
+        Test add item into first position in list
+        """
+        items = [
+            [1, 2, 3, 4],
+            ['a', 'b', 'c'],
+            ['100', 'AUG', '14', '67.5', 'CALL'],
+        ]
+
+        for item in items:
+            print 'item before: %s' % item
+            self.open_csv.add_normal_to_options_name(item)
+            print 'item after: %s\n' % item
+
+            self.assertEqual(item[1], 'Normal')
+
+    def test_remove_brackets_only(self):
+        """
+        Test remove brackets on options name
+        """
+        items = [
+            '100 AUG 14 47 PUT',
+            '100 (Weeklys) AUG2 14 1990 CALL',
+            '100 (Mini) AUG1 14 20 PUT',
+        ]
+
+        for item in items:
+            result = self.open_csv.remove_brackets_only(item)
+
+            print 'item: %s' % item
+            print 'result: %s' % result
+
+            self.assertNotIn('(', result)
+            self.assertNotIn(')', result)
+
+    def test_make_options_name_dict(self):
+        """
+        Test make options name from list into dict
+        """
+        items = [
+            ['100', 'Normal', 'AUG', '14', '67.5', 'CALL'],
+            ['100', 'Weeklys', 'AUG1', '14', '50', 'PUT']
+        ]
+
+        columns = [
+            'right',
+            'special',
+            'ex_month',
+            'ex_year',
+            'strike_price',
+            'contract'
+        ]
+
+        for item in items:
+            result = self.open_csv.make_options_name_dict(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), dict)
+
+            for column in columns:
+                self.assertIn(column, result.keys())
+
+    def test_format_option_contract(self):
+        """
+        Test format option contract that split name into 5 parts
+        :return:
+        """
+        items = [
+            '100 AUG 14 67.5 CALL',
+            '100 (Weeklys) AUG1 14 50 PUT',
+            '100 AUG 14 26.5 CALL'
+        ]
+
+        for item in items:
+            result = self.open_csv.format_option_contract(item)
+
+            print 'item: %s' % item
+            print 'result: %s' % result
+            print 'result length: %d' % len(result)
+            print 'result type: %s\n' % type(result)
+
+            self.assertEqual(len(result), 6)
+            self.assertEqual(type(result), dict)
 
     def test_make_pos_dict(self):
         """
