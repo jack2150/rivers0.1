@@ -76,13 +76,41 @@ class OpenPosCSV(object):
         return map(lambda x: x.rstrip(), line.split(','))
 
     @classmethod
+    def remove_bracket_symbols(cls, item):
+        """
+        Using input item return no brackets str
+        :param item: str
+        :return: str
+        """
+        if item[0] == '(' and item[-1] == ')':
+            item = '-' + item[1:-1]
+        return item
+
+    @classmethod
+    def remove_dollar_symbols(cls, item):
+        """
+        Using input item return  a no dollar symbol str
+        :type item: str
+        :rtype : str
+        """
+        return item.replace('$', '')
+
+    @classmethod
+    def remove_percent_symbols(cls, item):
+        """
+        Using input item return a no percent str
+        :param item: str
+        :return: str
+        """
+        return item.replace('%', '')
+
+    @classmethod
     def is_positions(cls, items):
         """
         Check line is positions data or not
         :rtype : bool
         """
         return len(items) == 14 and items[0] != 'Instrument'
-
 
     @classmethod
     def get_first_items(cls, items):
@@ -155,6 +183,34 @@ class OpenPosCSV(object):
         """
         return str(), dict()
 
+    def format_positions(self, items):
+        """
+        Format positions dict that ready for insert db
+        """
+        for key, item in enumerate(items):
+            if len(item):
+                item = self.remove_bracket_symbols(item)
+                item = self.remove_dollar_symbols(item)
+                item = self.remove_percent_symbols(item)
+
+                if key == 0:
+                    # first item is name
+                    item = str(item)
+                else:
+                    # other is float value
+                    try:
+                        item = float(item)
+                    except ValueError:
+                        item = 0.00
+            else:
+                # empty, so assign 0
+                item = 0.0
+
+            # assign back into items
+            items[key] = item
+
+        return items
+
     def set_pos(self, instrument, options, stock, symbol):
         """
         Save instrument, stock and options into class positions property
@@ -173,7 +229,7 @@ class OpenPosCSV(object):
         each symbol group got 3 parts
         summary, underlying and options
 
-        make sure you have follow order columns:
+        make sure ordered columns on csv files:
         Instrument,Qty,Days,Trade Price,Mark,Mrk Chng,Delta,
         Gamma,Theta,Vega,% Change,P/L Open,P/L Day,BP Effect
 
@@ -185,10 +241,12 @@ class OpenPosCSV(object):
         stock, options = self.reset_stock_and_options()
 
         for line in lines:
-            line = self.replace_dash_inside_quote(line=line)
-            items = self.split_lines_with_dash(line=line)
+            line = self.replace_dash_inside_quote(line)
+            items = self.split_lines_with_dash(line)
 
             if self.is_positions(items):
+                items = self.format_positions(items)
+
                 first_item = self.get_first_items(items)
 
                 # in order, instrument stock options
@@ -239,6 +297,17 @@ class OpenPosCSV(object):
         """
         return items[1]
 
+    def format_overall_item(self, item):
+        """
+        Format overall items that ready for insert db
+        :type item : str
+        :rtype : float
+        """
+        item = self.remove_bracket_symbols(item)
+        item = self.remove_dollar_symbols(item)
+
+        return float(item)
+
     def make_overall_dict(self, overall):
         """
         Input a list of overall data and use overall columns
@@ -272,9 +341,11 @@ class OpenPosCSV(object):
             items = self.split_lines_with_dash(line)
 
             if self.is_overall(items):
-                overall.append(self.get_overall_data_only(items))
+                item = self.get_overall_data_only(items)
+                item = self.format_overall_item(item)
 
-        print overall
+                overall.append(item)
+
         self.set_overall(overall)
 
     def read(self):

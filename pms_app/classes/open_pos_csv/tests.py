@@ -1,4 +1,5 @@
 # django classes
+from unittest import TestCase
 from django.test import TestCase
 from rivers2.settings import FILES
 
@@ -6,8 +7,8 @@ from rivers2.settings import FILES
 from __init__ import OpenPosCSV
 
 
-#noinspection PyPep8Naming
-class TestOpenCSV(TestCase):
+# noinspection PyPep8Naming
+class TestOpenPosCSV(TestCase):
     def setUp(self):
         print '=' * 100
         print "%s: currently run: %s" % (self.__class__.__name__, self._testMethodName)
@@ -64,6 +65,44 @@ class TestOpenCSV(TestCase):
 
         self.assertEqual(len(result), 14)
         self.assertEqual(type(result), list)
+
+    def test_remove_bracket_symbols(self):
+        """
+        Test remove brackets '()' on str item
+        """
+        item = '($5609.52)'
+        result = self.open_csv.remove_bracket_symbols(item)
+
+        print 'item: %s' % item
+        print 'result: %s' % result
+
+        self.assertNotIn('(', result)
+        self.assertNotIn(')', result)
+        self.assertIn('-', result)
+
+    def test_remove_dollar_symbols(self):
+        """
+        Test remove dollar symbol on str item
+        """
+        item = '3773.49'
+        result = self.open_csv.remove_dollar_symbols(item)
+
+        print 'item: %s' % item
+        print 'result: %s' % result
+
+        self.assertNotIn('$', result)
+
+    def test_remove_percent_symbols(self):
+        """
+        Test remove dollar symbol on str item
+        """
+        item = '+1.77%'
+        result = self.open_csv.remove_percent_symbols(item)
+
+        print 'item: %s' % item
+        print 'result: %s' % result
+
+        self.assertNotIn('%', result)
 
     def test_is_positions(self):
         """
@@ -224,6 +263,31 @@ class TestOpenCSV(TestCase):
         self.assertEqual(type(instrument), dict)
         self.assertFalse(len(instrument))
 
+    def test_format_positions(self):
+        """
+        Test format position that ready for insert db
+        """
+        items = [
+            ['ORACLE CORP COM', '0', '', '.00', '40.39', '-.57', '.00', '.00',
+             '.00', '.00', '', '$0.00', '$0.00', ''],
+            ['100 AUG 14 76 CALL', '+1', '15', '.54', '.36', '-.61', '22.01',
+             '10.16', '-2.58', '4.57', '', '($18.00)', '($18.00)', ''],
+            ['100 AUG 14 67.5 CALL', '+2', '15', '.37', '.31', 'N/A', '58.46',
+             '39.94', '-3.41', '9.57', '', '($12.00)', '($12.00)', '']
+        ]
+
+        for item in items:
+            result = self.open_csv.format_positions(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertNotIn('N/A', result)
+            self.assertNotIn('', result)
+            self.assertNotIn('$', result)
+            self.assertNotIn('(', result)
+            self.assertNotIn(')', result)
+
     def test_set_pos(self):
         """
         Test set positions into class with instrument, stock and options
@@ -342,6 +406,20 @@ class TestOpenCSV(TestCase):
             self.assertEqual(type(result), str)
             self.assertEqual(result, item[1])
 
+    def test_format_overall(self):
+        """
+        Test format overall that remove symbols and signs
+        """
+        items = ['$3773.49', '($5609.52)', '$0.00', '$1873.49', '$1873.49']
+
+        for item in items:
+            result = self.open_csv.format_overall_item(item)
+
+            print 'item: %s' % item
+            print 'result: %s\n' % result
+
+            self.assertEqual(type(result), float)
+
     def test_make_overall_dict(self):
         """
         Test using overall data list and make dict
@@ -447,32 +525,3 @@ class TestOpenCSV(TestCase):
         print '\n' + 'overall dict:'
         for k, o in overall.items():
             print '%s: %s' % (k, o)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
