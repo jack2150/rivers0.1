@@ -415,6 +415,24 @@ class TestOpenPosCSV(TestCase):
             self.assertNotIn('(', result)
             self.assertNotIn(')', result)
 
+    def test_get_company_name(self):
+        """
+        Test get company name from list
+        :return:
+        """
+        stock = {'mark_change': '-1.19', 'name': 'CELGENE CORP COM', 'pl_open': '$0.00',
+                 'days': '', 'mark': '87.15', 'vega': '.00', 'pl_day': '$0.00',
+                 'delta': '.00', 'bp_effect': '', 'theta': '.00', 'pct_change': '',
+                 'quantity': '0', 'gamma': '.00', 'trade_price': '.00'}
+
+        result = self.open_csv.get_company_name(stock)
+
+        print 'stock: %s' % stock
+        print 'result: %s' % result
+
+        self.assertEqual(result, 'CELGENE CORP COM')
+        self.assertEqual(type(result), str)
+
     def test_set_pos(self):
         """
         Test set positions into class with instrument, stock and options
@@ -441,22 +459,23 @@ class TestOpenPosCSV(TestCase):
                     'delta': '51.78', 'bp_effect': '', 'theta': '5.72', 'pct_change': '',
                     'quantity': '-1', 'gamma': '-8.49', 'trade_price': '1.84'}]
 
-        self.open_csv.set_pos(instrument, stock, options, symbol)
+        self.open_csv.set_pos(symbol, instrument, stock, options)
 
         positions = self.open_csv.positions
 
-        for s, pos in positions.items():
-            print 'symbol: %s' % s
-
-            self.assertEqual(s, symbol)
+        for pos in positions:
+            self.assertEqual(pos['Symbol'], symbol)
+            self.assertIn('Symbol', pos.keys())
+            self.assertIn('Company', pos.keys())
             self.assertIn('Instrument', pos.keys())
             self.assertIn('Stock', pos.keys())
             self.assertIn('Options', pos.keys())
 
-            for k, p in pos.items():
-                print k, p
-
-                self.assertIn(len(p), (2, 14))
+            print 'Symbol: %s' % pos['Symbol']
+            print 'Company: %s' % pos['Company']
+            print 'Instrument: %s' % pos['Instrument']
+            print 'Stock: %s' % pos['Stock']
+            print 'Options: %s' % pos['Options']
 
     def test_set_pos_from_lines(self):
         """
@@ -469,16 +488,18 @@ class TestOpenPosCSV(TestCase):
 
         self.assertEqual(len(positions), 20)
 
-        for s, pos in positions.items():
-            print 'symbol: %s' % s
-
+        for pos in positions:
+            self.assertIn('Symbol', pos.keys())
+            self.assertIn('Company', pos.keys())
             self.assertIn('Instrument', pos.keys())
             self.assertIn('Stock', pos.keys())
             self.assertIn('Options', pos.keys())
 
-            for k, p in pos.items():
-                print k, p
-
+            print 'Symbol: %s' % pos['Symbol']
+            print 'Company: %s' % pos['Company']
+            print 'Instrument: %s' % pos['Instrument']
+            print 'Stock: %s' % pos['Stock']
+            print 'Options: %s' % pos['Options']
             print ''
 
     def test_last_five_lines(self):
@@ -578,7 +599,7 @@ class TestOpenPosCSV(TestCase):
             'pl_ytd',
             'bp_adjustment',
             'futures_bp',
-            'available_dollars'
+            'available'
         ]
 
         for name in columns_name:
@@ -630,16 +651,18 @@ class TestOpenPosCSV(TestCase):
         print 'positions type: %s' % type(positions)
         print 'positions length: %d\n' % len(positions)
 
-        for s, pos in positions.items():
-            print 'symbol: %s' % s
-
+        for pos in positions:
+            self.assertIn('Symbol', pos.keys())
+            self.assertIn('Company', pos.keys())
             self.assertIn('Instrument', pos.keys())
             self.assertIn('Stock', pos.keys())
             self.assertIn('Options', pos.keys())
 
-            for k, p in pos.items():
-                print k, p
-
+            print 'Symbol: %s' % pos['Symbol']
+            print 'Company: %s' % pos['Company']
+            print 'Instrument: %s' % pos['Instrument']
+            print 'Stock: %s' % pos['Stock']
+            print 'Options: %s' % pos['Options']
             print ''
 
         # overall section
@@ -650,5 +673,4 @@ class TestOpenPosCSV(TestCase):
         self.assertEqual(len(overall), 5)
 
         print '\n' + 'overall dict:'
-        for k, o in overall.items():
-            print '%s: %s' % (k, o)
+        print overall

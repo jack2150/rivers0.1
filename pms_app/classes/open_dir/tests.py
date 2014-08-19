@@ -94,3 +94,45 @@ class TestOpenDir(TestCase):
             print json
 
         self.assertEqual(type(json_str), str)
+
+    def test_get_path(self):
+        """
+        Test get path using date
+        :return:
+        """
+        dates = [
+            '2014-08-01',
+            '2013-12-20',
+            '2014-08-02'
+        ]
+
+        for key, date in enumerate(dates):
+            path = self.open_dir.get_path(date)
+
+            print 'date: %s' % date
+            print 'path: %s\n' % path
+
+            if key == 1:
+                self.assertEqual(date, '2013-12-20')
+                self.assertFalse(path)
+            else:
+                self.assertIn(date, path)
+                self.assertIn('.csv', path)
+                self.assertEqual(type(path), str)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

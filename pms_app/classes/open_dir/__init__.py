@@ -74,3 +74,18 @@ class OpenDir(object):
             self.json = '[' + self.json[:-1] + ']'
 
         return self.json
+
+    def get_path(self, date):
+        """
+        Get the path using date
+        :param date: str
+        :return: str
+        """
+        paths = self.get_files_from_folder()
+
+        result = ''
+        for path in paths:
+            if date in path:
+                result = path
+
+        return result

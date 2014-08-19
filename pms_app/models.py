@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Pos(models.Model):
+class Position(models.Model):
     """
     A position contains 1 instrument, 1 stock and multiple options
     """
@@ -30,8 +30,8 @@ class Pos(models.Model):
         return output
 
 
-class PosIns(models.Model):
-    position = models.ForeignKey(Pos)
+class PositionInstrument(models.Model):
+    position = models.ForeignKey(Position)
 
     delta = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
     gamma = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
@@ -78,8 +78,8 @@ class PosIns(models.Model):
         return output
     
 
-class PosStock(models.Model):
-    position = models.ForeignKey(Pos)
+class PositionStock(models.Model):
+    position = models.ForeignKey(Position)
 
     quantity = models.IntegerField(default=0)
     trade_price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
@@ -122,8 +122,8 @@ class PosStock(models.Model):
         return output
 
 
-class PosOption(models.Model):
-    position = models.ForeignKey(Pos)
+class PositionOption(models.Model):
+    position = models.ForeignKey(Position)
 
     # option contract name
     right = models.IntegerField(default=100)
@@ -201,6 +201,31 @@ class PosOption(models.Model):
         output += 'pl_open: %.2f, ' % self.pl_open
         output += 'pl_day: %.2f, ' % self.pl_day
         output += 'bp_effect: 0'
+        output += '}'
+
+        return output
+
+
+class Overall(models.Model):
+    date = models.DateField(unique=True)
+
+    cash_sweep = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    pl_ytd = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    futures_bp = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    bp_adjustment = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    available = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+
+    def __unicode__(self):
+        """
+        use all property and output json format string
+        """
+        output = '{'
+        output += 'date: "%s", ' % self.date
+        output += 'cash_sweep: %.2f, ' % self.cash_sweep
+        output += 'pl_ytd: %.2f, ' % self.pl_ytd
+        output += 'futures_bp: %.2f, ' % self.futures_bp
+        output += 'bp_adjustment: %.2f, ' % self.bp_adjustment
+        output += 'available: %.2f' % self.available
         output += '}'
 
         return output

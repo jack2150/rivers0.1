@@ -38,8 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'pms_app',
-    'pms_app.impos_app',
-    'pms_app.posv_app',
+    'pms_app.pos_import_app',
+    'pms_app.pos_view_app',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -97,5 +97,6 @@ TEMPLATE_DIRS = (
 # import files
 FILES = {
     'tos_positions': BASE_DIR + '/files/tos.pos/',
+    'tos_positions_completed': BASE_DIR + '/files/tos.pos/completed/',
     'tos_statements': BASE_DIR + '/files/tos.stm/',
 }

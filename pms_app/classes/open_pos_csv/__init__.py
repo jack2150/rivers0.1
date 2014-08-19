@@ -29,7 +29,7 @@ class OpenPosCSV(object):
         ]
 
         # positions
-        self.positions = {}
+        self.positions = list()
 
         # overall columns
         self.overall_columns = [
@@ -37,11 +37,11 @@ class OpenPosCSV(object):
             'pl_ytd',
             'bp_adjustment',
             'futures_bp',
-            'available_dollars'
+            'available'
         ]
 
         # overall
-        self.overall = {}
+        self.overall = dict()
 
         # options name
         self.options_name_columns = [
@@ -277,17 +277,31 @@ class OpenPosCSV(object):
 
         return items
 
-    def set_pos(self, instrument, options, stock, symbol):
+    @classmethod
+    def get_company_name(cls, stock):
+        """
+        Get company name from stock list
+        :param stock: dict
+        :return: str
+        """
+        return stock['name']
+
+    def set_pos(self, symbol, instrument, stock, options):
         """
         Save instrument, stock and options into class positions property
-        :rtype : None
+        :param instrument: dict
+        :param options: list
+        :param stock: dict
+        :param symbol: str
         """
         if len(options):
-            self.positions[symbol] = {
+            self.positions.append({
+                'Symbol': symbol,
+                'Company': self.get_company_name(stock),
                 'Instrument': instrument,
                 'Stock': stock,
                 'Options': options
-            }
+            })
 
     @classmethod
     def split_str_with_space(cls, item):
@@ -327,7 +341,7 @@ class OpenPosCSV(object):
                 # in order, instrument stock options
                 if self.is_instrument(first_item):
                     # append position into positions
-                    self.set_pos(instrument, options, stock, symbol)
+                    self.set_pos(symbol, instrument, stock, options)
 
                     # set symbol for this position
                     symbol = first_item

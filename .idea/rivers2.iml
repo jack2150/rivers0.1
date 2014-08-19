@@ -11,10 +11,18 @@
   </component>
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/static/webix" />
+      <sourceFolder url="file://$MODULE_DIR$/pms_app" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rivers2" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pms_app/classes" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pms_app/pos_import_app" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pms_app/pos_view_app" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pms_app/classes/open_dir" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pms_app/classes/open_pos_csv" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pms_app/classes/spreads" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Webix" level="project" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="" />
@@ -29,9 +37,8 @@
       <list>
         <option value="$MODULE_DIR$/templates" />
         <option value="$MODULE_DIR$/pms_app/templates" />
-        <option value="$MODULE_DIR$/pms_app/posv_app/templates" />
-        <option value="$MODULE_DIR$/pms_app/impos_app/templates" />
-        <option value="$MODULE_DIR$/static" />
+        <option value="$MODULE_DIR$/pms_app/pos_view_app/templates" />
+        <option value="$MODULE_DIR$/pms_app/pos_import_app/templates" />
       </list>
     </option>
   </component>

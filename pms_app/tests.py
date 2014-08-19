@@ -1,5 +1,5 @@
 from django.test import TestCase
-from models import Pos, PosIns, PosStock, PosOption
+import models
 
 
 # Create your tests here.
@@ -28,7 +28,7 @@ class TestModels(TestCase):
             'date': '2014-08-01',
         }
 
-        pos = Pos(**items)
+        pos = models.Position(**items)
         pos.save()
 
         return pos
@@ -43,7 +43,7 @@ class TestModels(TestCase):
             'date': '2014-08-01',
         }
 
-        pos = Pos(**items)
+        pos = models.Position(**items)
         pos.save()
         print 'Pos saved!\n'
 
@@ -81,7 +81,7 @@ class TestModels(TestCase):
             'trade_price': 0.0
         }
 
-        pos_ins = PosIns()
+        pos_ins = models.PositionInstrument()
         pos_ins.position = self.ready_pos()
         pos_ins.set_dict(items)
         pos_ins.save()
@@ -119,7 +119,7 @@ class TestModels(TestCase):
             'trade_price': 0.0
         }
 
-        pos_stock = PosStock()
+        pos_stock = models.PositionStock()
         pos_stock.position = self.ready_pos()
         pos_stock.set_dict(items)
         pos_stock.save()
@@ -157,7 +157,7 @@ class TestModels(TestCase):
         pos = self.ready_pos()
 
         for item in items:
-            pos_options = PosOption()
+            pos_options = models.PositionOption()
             pos_options.position = pos
             pos_options.set_dict(item)
             pos_options.save()
@@ -176,3 +176,28 @@ class TestModels(TestCase):
             self.assertEqual('}', json[-1])
 
             print '\n' + '-' * 100 + '\n'
+
+    def test_overall_set_save_json(self):
+        """
+        Test
+        """
+        date = '2014-08-01'
+
+        items = {
+            'available': 1873.49,
+            'bp_adjustment': 0.0,
+            'futures_bp': 1873.49,
+            'pl_ytd': -5609.52,
+            'cash_sweep': 3773.49
+        }
+
+        overall = models.Overall(**items)
+        overall.date = date
+        overall.save()
+        print 'Overall saved!\n'
+
+        json = overall.__unicode__()
+
+        print 'overall id: %d' % overall.id
+        print 'overall in json:'
+        print json[:102] + '\n' + json[102:]

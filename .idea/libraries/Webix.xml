@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="Webix" type="javaScript">
+    <properties>
+      <sourceFilesUrls>
+        <item url="file://$PROJECT_DIR$/static/webix/webix_debug.js" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/static/webix/webix.js" />
+      <root url="file://$PROJECT_DIR$/static/webix/webix_debug.js" />
+    </CLASSES>
+    <DOCUMENTATION>
+      <root url="http://docs.webix.com/" />
+    </DOCUMENTATION>
+    <SOURCES />
+  </library>
+</component>
