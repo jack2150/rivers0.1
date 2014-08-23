@@ -3,7 +3,7 @@ from django.test import TestCase
 from rivers2.settings import FILES
 
 # test classes
-from __init__ import OpenPosCSV
+from open_pos_csv import OpenPosCSV
 
 
 # noinspection PyPep8Naming
@@ -486,7 +486,7 @@ class TestOpenPosCSV(TestCase):
 
         positions = self.open_csv.positions
 
-        self.assertEqual(len(positions), 20)
+        self.assertEqual(len(positions), 21)
 
         for pos in positions:
             self.assertIn('Symbol', pos.keys())
@@ -651,18 +651,27 @@ class TestOpenPosCSV(TestCase):
         print 'positions type: %s' % type(positions)
         print 'positions length: %d\n' % len(positions)
 
-        for pos in positions:
-            self.assertIn('Symbol', pos.keys())
-            self.assertIn('Company', pos.keys())
-            self.assertIn('Instrument', pos.keys())
-            self.assertIn('Stock', pos.keys())
-            self.assertIn('Options', pos.keys())
+        for position in positions:
+            for key, item in position.items():
+                if key == 'Symbol' or key == 'Company':
+                    self.assertEqual(type(item), str)
+                elif key == 'Instrument' or key == 'Stock':
+                    self.assertEqual(type(item), dict)
+                    self.assertIn(len(item), (0, 14))
+                elif key == 'Options':
+                    self.assertEqual(type(item), list)
 
-            print 'Symbol: %s' % pos['Symbol']
-            print 'Company: %s' % pos['Company']
-            print 'Instrument: %s' % pos['Instrument']
-            print 'Stock: %s' % pos['Stock']
-            print 'Options: %s' % pos['Options']
+            self.assertIn('Symbol', position.keys())
+            self.assertIn('Company', position.keys())
+            self.assertIn('Instrument', position.keys())
+            self.assertIn('Stock', position.keys())
+            self.assertIn('Options', position.keys())
+
+            print 'Symbol: %s' % position['Symbol']
+            print 'Company: %s' % position['Company']
+            print 'Instrument: %s' % position['Instrument']
+            print 'Stock: %s' % position['Stock']
+            print 'Options: %s' % position['Options']
             print ''
 
         # overall section
@@ -674,3 +683,35 @@ class TestOpenPosCSV(TestCase):
 
         print '\n' + 'overall dict:'
         print overall
+
+    def test_stock_only_files(self):
+        """
+        Test ready stock only files
+        """
+        test_date = '2014-03-10'
+        test_path = FILES['tos_positions'] + 'tests/' + '2014-03-10-stock_only.csv'
+
+        print 'file date: %s' % test_date
+        print 'file path: %s\n' % test_path
+
+        open_csv = OpenPosCSV(fname=test_path)
+
+        positions, overalls = open_csv.read()
+
+        for position in positions:
+            for key, item in position.items():
+                if key == 'Symbol' or key == 'Company':
+                    self.assertEqual(type(item), str)
+                elif key == 'Instrument' or key == 'Stock':
+                    self.assertEqual(type(item), dict)
+                    self.assertIn(len(item), (0, 14))
+                elif key == 'Options':
+                    self.assertEqual(type(item), list)
+
+            for key in ['Symbol', 'Company', 'Instrument', 'Stock', 'Options']:
+                self.assertIn(key, position.keys())
+                print '%s found in positions!' % key
+
+            print ''
+
+

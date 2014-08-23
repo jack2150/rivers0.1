@@ -1,6 +1,9 @@
 from django.core.urlresolvers import reverse
 from django.shortcuts import render, HttpResponse
+
 from pms_app import models
+
+import datetime
 
 
 # Create your views here.
@@ -12,8 +15,12 @@ def index(request, date=None):
     :return: render
     """
     if date is None:
-        overall = models.Overall.objects.latest('date')
-        date = overall.date.strftime('%Y-%m-%d')
+        if models.Overall.objects.exists():
+            overall = models.Overall.objects.last()
+            date = overall.date.strftime('%Y-%m-%d')
+        else:
+            date = datetime.date.today()
+
 
     params = {
         'default_path': reverse('pos_view_app_index'),
@@ -74,9 +81,14 @@ def overall_json(request, date=None):
         overall = models.Overall.objects.filter(date=date)
 
         if overall.exists():
-            overall = overall.first()
+            overall = overall.last()
+        else:
+            overall = {}
     else:
-        overall = models.Overall.objects.latest('date')
+        if models.Overall.objects.exists():
+            overall = models.Overall.objects.latest('date')
+        else:
+            overall = {}
 
     return HttpResponse(
         overall,
@@ -94,7 +106,11 @@ def positions_json(request, date=None):
     json = list()
 
     if date is None:
-        date = models.Position.objects.latest('date')
+        #date = models.Position.objects.latest('date')
+        if models.Overall.objects.exists():
+            date = models.Overall.objects.latest('date')
+        else:
+            date = datetime.date.today().strftime('%Y-%m-%d')
 
     positions = models.Position.objects.filter(date=date)
     instruments = models.PositionInstrument.objects.filter(position=positions)

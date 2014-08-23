@@ -2,7 +2,7 @@
 from unittest import TestCase
 
 # test classes
-from __init__ import OpenDir
+from open_dir import OpenDir
 
 
 #noinspection PyPep8Naming
@@ -119,20 +119,3 @@ class TestOpenDir(TestCase):
                 self.assertIn(date, path)
                 self.assertIn('.csv', path)
                 self.assertEqual(type(path), str)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
