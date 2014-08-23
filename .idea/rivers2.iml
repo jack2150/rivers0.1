@@ -19,6 +19,7 @@
       <sourceFolder url="file://$MODULE_DIR$/pms_app/classes/open_dir" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/pms_app/classes/open_pos_csv" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/pms_app/classes/spreads" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/base_app" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -39,6 +40,7 @@
         <option value="$MODULE_DIR$/pms_app/templates" />
         <option value="$MODULE_DIR$/pms_app/pos_view_app/templates" />
         <option value="$MODULE_DIR$/pms_app/pos_import_app/templates" />
+        <option value="$MODULE_DIR$/base_app/template" />
       </list>
     </option>
   </component>

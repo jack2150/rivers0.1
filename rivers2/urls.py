@@ -7,7 +7,10 @@ urlpatterns = patterns(
     # url(r'^$', 'rivers2.views.home', name='home')
     '',
 
-    # pms
+    # base_app
+    url(r'^base/', include('base_app.urls')),
+
+    # pms_app
     url(r'^pms/', include('pms_app.urls')),
 
     # admin

@@ -22,9 +22,9 @@ class Position(models.Model):
         :return: str
         """
         output = '{'
-        output += 'symbol: "%s", ' % self.symbol
-        output += 'company: "%s", ' % self.company
-        output += 'date: "%s"' % self.date
+        output += '"symbol": "%s", ' % self.symbol
+        output += '"company": "%s", ' % self.company
+        output += '"date": "%s"' % self.date
         output += '}'
 
         return output
@@ -59,20 +59,20 @@ class PositionInstrument(models.Model):
         :return: str
         """
         output = '{'
-        output += 'name: "%s", ' % self.position.company
-        output += 'quantity: 0, '
-        output += 'days: 0, '
-        output += 'trade_price: 0, '
-        output += 'mark: 0, '
-        output += 'mark_change: 0, '
-        output += 'delta: %.2f, ' % self.delta
-        output += 'gamma: %.2f, ' % self.gamma
-        output += 'theta: %.2f, ' % self.theta
-        output += 'vega: %.2f, ' % self.vega
-        output += 'pct_change: %.2f, ' % self.pct_change
-        output += 'pl_open: %.2f, ' % self.pl_open
-        output += 'pl_day: %.2f, ' % self.pl_day
-        output += 'bp_effect: %.2f' % self.bp_effect
+        output += '"name": "%s", ' % self.position.company
+        output += '"quantity": 0, '
+        output += '"days": 0, '
+        output += '"trade_price": 0, '
+        output += '"mark": 0, '
+        output += '"mark_change": 0, '
+        output += '"delta": %.2f, ' % self.delta
+        output += '"gamma": %.2f, ' % self.gamma
+        output += '"theta": %.2f, ' % self.theta
+        output += '"vega": %.2f, ' % self.vega
+        output += '"pct_change": %.2f, ' % self.pct_change
+        output += '"pl_open": %.2f, ' % self.pl_open
+        output += '"pl_day": %.2f, ' % self.pl_day
+        output += '"bp_effect": %.2f' % self.bp_effect
         output += '}'
 
         return output
@@ -103,20 +103,20 @@ class PositionStock(models.Model):
 
     def __unicode__(self):
         output = '{'
-        output += 'name: "%s", ' % self.position.symbol
-        output += 'quantity: %+d, ' % self.quantity
-        output += 'days: 0, '
-        output += 'trade_price: %.2f, ' % self.trade_price
-        output += 'mark: %.2f, ' % self.mark
-        output += 'mark_change: %.2f, ' % self.mark_change
-        output += 'delta: 0, '
-        output += 'gamma: 0, '
-        output += 'theta: 0, '
-        output += 'vega: 0, '
-        output += 'pct_change: %.2f, ' % self.pct_change
-        output += 'pl_open: %.2f, ' % self.pl_open
-        output += 'pl_day: %.2f, ' % self.pl_day
-        output += 'bp_effect: %.2f' % self.bp_effect
+        output += '"name": "%s", ' % self.position.symbol
+        output += '"quantity": %+d, ' % self.quantity
+        output += '"days": 0, '
+        output += '"trade_price": %.2f, ' % self.trade_price
+        output += '"mark": %.2f, ' % self.mark
+        output += '"mark_change": %.2f, ' % self.mark_change
+        output += '"delta": 0, '
+        output += '"gamma": 0, '
+        output += '"theta": 0, '
+        output += '"vega": 0, '
+        output += '"pct_change": %.2f, ' % self.pct_change
+        output += '"pl_open": %.2f, ' % self.pl_open
+        output += '"pl_day": %.2f, ' % self.pl_day
+        output += '"bp_effect": %.2f' % self.bp_effect
         output += '}'
 
         return output
@@ -169,12 +169,6 @@ class PositionOption(models.Model):
         """
         use all property and output json format string
         """
-        # prepare pct change
-        if self.trade_price:
-            pct_change = float(self.mark_change / self.trade_price * 100)
-        else:
-            pct_change = 0
-
         # prepare options name
         options = '%s %s %s %s %s %s' % (
             self.right,
@@ -187,20 +181,20 @@ class PositionOption(models.Model):
 
         # ready output
         output = '{'
-        output += 'name: "%s", ' % options
-        output += 'quantity: %d, ' % self.quantity
-        output += 'days: %d, ' % self.days
-        output += 'trade_price: %.2f, ' % self.trade_price
-        output += 'mark: %.2f, ' % self.mark
-        output += 'mark_change: %.2f, ' % self.mark_change
-        output += 'delta: %.2f, ' % self.delta
-        output += 'gamma: %.2f, ' % self.gamma
-        output += 'theta: %.2f, ' % self.theta
-        output += 'vega: %.2f, ' % self.vega
-        output += 'pct_change: %.2f, ' % pct_change
-        output += 'pl_open: %.2f, ' % self.pl_open
-        output += 'pl_day: %.2f, ' % self.pl_day
-        output += 'bp_effect: 0'
+        output += '"name": "%s", ' % options
+        output += '"quantity": %d, ' % self.quantity
+        output += '"days": %d, ' % self.days
+        output += '"trade_price": %.2f, ' % self.trade_price
+        output += '"mark": %.2f, ' % self.mark
+        output += '"mark_change": %.2f, ' % self.mark_change
+        output += '"delta": %.2f, ' % self.delta
+        output += '"gamma": %.2f, ' % self.gamma
+        output += '"theta": %.2f, ' % self.theta
+        output += '"vega": %.2f, ' % self.vega
+        output += '"pct_change": %.2f, ' % self.pct_change
+        output += '"pl_open": %.2f, ' % self.pl_open
+        output += '"pl_day": %.2f, ' % self.pl_day
+        output += '"bp_effect": 0'
         output += '}'
 
         return output
@@ -220,12 +214,12 @@ class Overall(models.Model):
         use all property and output json format string
         """
         output = '{'
-        output += 'date: "%s", ' % self.date
-        output += 'cash_sweep: %.2f, ' % self.cash_sweep
-        output += 'pl_ytd: %.2f, ' % self.pl_ytd
-        output += 'futures_bp: %.2f, ' % self.futures_bp
-        output += 'bp_adjustment: %.2f, ' % self.bp_adjustment
-        output += 'available: %.2f' % self.available
+        output += '"date": "%s", ' % self.date
+        output += '"cash_sweep": %.2f, ' % self.cash_sweep
+        output += '"pl_ytd": %.2f, ' % self.pl_ytd
+        output += '"futures_bp": %.2f, ' % self.futures_bp
+        output += '"bp_adjustment": %.2f, ' % self.bp_adjustment
+        output += '"available": %.2f' % self.available
         output += '}'
 
         return output

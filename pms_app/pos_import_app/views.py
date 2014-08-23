@@ -1,8 +1,11 @@
 # python class
 from os import rename
+from pandas import datetime
+from pandas.tseries.offsets import BDay
+
 
 # django class
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse
 from rivers2.settings import FILES
 
 # control and models class
@@ -21,7 +24,7 @@ def index(request):
         'files': OpenDir().to_json(),
     }
 
-    return render(request, 'index.html', parameters)
+    return render(request, 'import/index.html', parameters)
 
 
 def complete(request, date=None):
@@ -32,9 +35,16 @@ def complete(request, date=None):
     :rtype : render
     """
     try:
+        # get path then open file
         path = OpenDir().get_path(date)
         fname = OpenDir().get_fname_from_path(path)
 
+        # after opening, date need to minus one
+        pd_date = datetime.strptime(date, '%Y-%m-%d')
+        pd_date = pd_date - BDay(1)
+        date = pd_date.strftime('%Y-%m-%d')
+
+        # continues...
         positions, overall = OpenPosCSV(path).read()
 
         for position in positions:
@@ -72,17 +82,58 @@ def complete(request, date=None):
         # move files into completed folder
         rename(path, FILES['tos_positions_completed'] + fname)
 
-        # set parameters into template
+        # set parameters into templates
         parameters = {
-            'date': date,
-            'fname': fname
+            'date': str(date),
+            'fname': str(fname)
         }
     except IOError:
-        # set parameters into template
+        # set parameters into templates
         parameters = {
-            'date': False,
-            'fname': False
+            'date': '',
+            'fname': ''
         }
 
-    return render(request, 'complete.html', parameters)
+    return HttpResponse(
+        parameters.__str__(),
+        content_type='application/json'
+    )
 
+
+def webix_js(request):
+    """
+    A webix components for views
+    :param request:
+    :return: render
+    """
+    return render(request, 'import/webix.js',
+                  content_type='application/javascript')
+
+
+def logic_js(request):
+    """
+    A webix actions for views
+    :param request:
+    :return: render
+    """
+    return render(request, 'import/logic.js',
+                  content_type='application/javascript')
+
+
+def files_json(request):
+    """
+    Positions csv files in json format
+    :param request: dict
+    :return: HttpResponse
+    """
+    json = '[{'
+    json += 'id: -1, '
+    json += 'value: "Positions", '
+    json += 'open: true, '
+    json += 'data: %s' % OpenDir().to_json()
+    json += '}]'
+
+    return HttpResponse(
+        json,
+        content_type='application/json'
+    )

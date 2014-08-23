@@ -5,7 +5,15 @@
 
     {% load staticfiles %}
     <link rel="stylesheet" href="{% static 'webix/webix.css' %}" type="text/css">
-    <script src="{% static 'webix/webix.js' %}" type="text/javascript"></script>
+    <script type="text/javascript" src="{% static 'webix/webix.js' %}"></script>
+
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" type="text/css">
+
+    <script type="text/javascript" src="{% url 'base_webix_js' %}"></script>
+    <script type="text/javascript" src="{% url 'base_logic_js' %}"></script>
+
+    {% block head_js %}
+    {% endblock %}
 
     <title>{% block title %}{% endblock %}</title>
 </head>
@@ -13,6 +21,22 @@
 
 {% block body %}
 {% endblock %}
+
+<script type="text/javascript">
+var current_path = "{{ current_path }}";
+{% if default_path %}
+    current_path = "{{ default_path }}";
+{% endif %}
+
+webix.ready(function(){
+    //webix.ui(ui_header);
+    webix.ui(ui_body);
+    //webix.ui(ui_footer);
+    logic.init();
+});
+
+
+</script>
 
 </body>
 </html>

@@ -43,10 +43,12 @@ class TestViews(TestCase):
         response = self.client.get(reverse('pos_import_app_index'))
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(response, 'PositionStatement.csv', count=2)
-        self.assertContains(response, '"id": "2014-08-01"', count=1)
-        self.assertContains(response, '"id": "2014-08-02"', count=1)
-        self.assertContains(response, response.context['files'])
+        print 'files:'
+        print response.context['files'].split('},')[0] + '}'
+        print ' ' + response.context['files'].split('},')[1]
+
+        self.assertIn('2014-08-01-PositionStatement.csv', response.context['files'])
+        self.assertIn('2014-08-02-PositionStatement.csv', response.context['files'])
 
     def test_complete(self):
         """
@@ -56,9 +58,16 @@ class TestViews(TestCase):
         self.move_csv_back_to_folder()
 
         date = '2014-08-01'
-        response = self.client.get(reverse('pos_import_app_complete', args=(date,)))
+
+        url = reverse('pos_import_app_complete', args=(date,))
+        response = self.client.get(url)
 
         print 'date: %s' % date
+        print 'response:'
+        print response.content
+
+        print 'content-type: %s\n' % response['Content-Type']
+        self.assertEqual(response['Content-Type'], 'application/json')
 
         self.assertEqual(response.status_code, 200)
 
@@ -91,12 +100,53 @@ class TestViews(TestCase):
         self.assertTrue(isfile(self.original_path))
 
         # view parameters test
-        self.assertEqual(date, response.context['date'])
-        self.assertIn(date, response.context['fname'])
-        self.assertIn('saved', response.content)
+        self.assertIn(date, response.content)
+        self.assertIn(date, response.content)
 
+    def test_webix_js(self):
+        """
+        Test webix js url return a correct files
+        """
+        response = self.client.get(reverse('pos_import_webix_js'))
 
+        print 'content-type: %s\n' % response['Content-Type']
+        self.assertEqual(response['Content-Type'], 'application/javascript')
 
+        for item in ['pos_file_header', 'pos_file_tree', 'import_button', 'ui_body']:
+            print '"%s" var found!' % item
+            self.assertIn(item, response.content)
 
+    def test_logic_js(self):
+        """
+        Test logic js url return a correct files
+        """
+        response = self.client.get(reverse('pos_import_logic_js'))
 
+        print 'content-type: %s\n' % response['Content-Type']
+        self.assertEqual(response['Content-Type'], 'application/javascript')
+
+        for item in ['page', 'complete', 'logic']:
+            print '"%s" var found!' % item
+            self.assertIn(item, response.content)
+
+    def test_files_json(self):
+        """
+        Test files json return correct data
+        """
+        response = self.client.get(reverse('pos_import_files_json'))
+
+        print 'response:'
+        print response.content[:48]
+        print response.content[48:].split('},')[0] + '}'
+        print ' ' + response.content[48:].split('},')[1]
+
+        print '\n' + 'content-type: %s\n' % response['Content-Type']
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        for item in ['id', 'Positions', 'open', 'data', 'value']:
+            print '"%s" var found!' % item
+            self.assertIn(item, response.content)
+
+        self.assertIn('2014-08-01-PositionStatement.csv', response.content)
+        self.assertIn('2014-08-02-PositionStatement.csv', response.content)
 

@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'pms_app',
     'pms_app.pos_import_app',
     'pms_app.pos_view_app',
+    'base_app',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -48,13 +49,24 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
 )
 
 ROOT_URLCONF = 'rivers2.urls'
 
 WSGI_APPLICATION = 'rivers2.wsgi.application'
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.core.context_processors.tz",
+    "django.contrib.messages.context_processors.messages",
+
+    'base_app.views.current_path',
+)
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
@@ -89,14 +101,14 @@ STATICFILES_DIRS = (
     'static',
 )
 
-# template dirs
+# templates dirs
 TEMPLATE_DIRS = (
-    BASE_DIR + '/templates',
+    BASE_DIR + '/templates'
 )
 
 # import files
 FILES = {
-    'tos_positions': BASE_DIR + '/files/tos.pos/',
-    'tos_positions_completed': BASE_DIR + '/files/tos.pos/completed/',
-    'tos_statements': BASE_DIR + '/files/tos.stm/',
+    'tos_positions': BASE_DIR + '/_files/tos.pos/',
+    'tos_positions_completed': BASE_DIR + '/_files/tos.pos/completed/',
+    'tos_statements': BASE_DIR + '/_files/tos.stm/',
 }

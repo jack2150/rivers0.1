@@ -2,10 +2,13 @@
   <dictionary name="Jack">
     <words>
       <w>autoheight</w>
+      <w>autowidth</w>
       <w>datatable</w>
+      <w>eval</w>
       <w>fname</w>
       <w>fpath</w>
       <w>fpaths</w>
+      <w>treetable</w>
       <w>tsla</w>
     </words>
   </dictionary>

@@ -1,0 +1,14 @@
+.my_style .webix_hcell{
+    text-align: right;
+    font-weight: bold;
+    padding-right: 16px;
+}
+
+.my_style .webix_column {
+    text-align: right;
+
+}
+
+.my_style .left {
+    text-align: left;
+}

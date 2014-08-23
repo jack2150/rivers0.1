@@ -1323,12 +1323,12 @@ div.webix_modal_cover {
   background-position: 0px 1px;
   background-repeat: repeat-x;
 }
-/*content in header and footer*/
+/*content in pos_file_header and footer*/
 .webix_hcell {
   padding: 0px 10px 0px 10px;
   text-align: left;
 }
-/*borders in header and footer*/
+/*borders in pos_file_header and footer*/
 .webix_ss_header td {
   border-right: 1px solid #a4bed4;
   border-bottom: 1px solid #a4bed4;
@@ -1407,7 +1407,7 @@ div.webix_modal_cover {
   border-left: 1px solid #ffd47b;
   padding-left: 9px;
 }
-/*header selection in column mode*/
+/*pos_file_header selection in column mode*/
 .webix_sel_hcell,
 .webix_dd_over_column {
   background-color: #c9eaf5;
