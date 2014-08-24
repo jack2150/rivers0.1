@@ -72,19 +72,19 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 200)
 
         positions = pm.Position.objects.all()
-        self.assertEqual(positions.count(), 20)
+        self.assertEqual(positions.count(), 21)
         print 'positions saved: %d' % positions.count()
 
         instruments = pm.PositionInstrument.objects.all()
-        self.assertEqual(instruments.count(), 20)
+        self.assertEqual(instruments.count(), 21)
         print 'instruments saved: %d' % instruments.count()
 
         stocks = pm.PositionStock.objects.all()
-        self.assertEqual(stocks.count(), 20)
+        self.assertEqual(stocks.count(), 21)
         print 'stocks saved: %d' % stocks.count()
 
         options = pm.PositionOption.objects.all()
-        self.assertEqual(options.count(), 41)
+        self.assertEqual(options.count(), 43)
         print 'options saved: %d' % options.count()
 
         overall = pm.Overall.objects.all()

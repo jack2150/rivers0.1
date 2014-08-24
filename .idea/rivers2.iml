@@ -21,7 +21,7 @@
       <sourceFolder url="file://$MODULE_DIR$/pms_app/classes/spreads" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/base_app" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 2.7.7 (C:\Python\Anaconda\python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Webix" level="project" />
   </component>
