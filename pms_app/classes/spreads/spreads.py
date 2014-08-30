@@ -1,54 +1,180 @@
-from pms_app.models import PositionStock, PositionOption
+class Spread(object):
+    def __init__(self):
+        pass
+
+    def first(self):
+        pass
 
 
-class Spreads(object):
-    def __init__(self, position):
+class StartProfit(object):
+    """
+    Start profit use for greater or less
+    """
+    def __init__(self, price=0.0, condition=''):
         """
-        Set stock and options at init
-        :param position: models.Position
+        Set the parameters for max profit class
+        :param price: float
+        :param condition: str
         """
-        self.stock = PositionStock.objects.filter(position=position).first()
-        """:type: PositionStock"""
+        self.price = price
+        self.condition = condition
 
-        self.options = list()
-        """:type: list of PositionOption"""
-        for option in PositionOption.objects.filter(position=position).all():
-            self.options.append(option)
+    def __unicode__(self):
+        """
+        Describe the detail of break even
+        :return: str
+        """
+        output = '%-40s: %s %.2f' % ('Start profit when price is',
+                                     self.condition, self.price)
 
-    def identity(self):
-        """
-        Check how many legs, quantity, strike and etc...
-        """
-        print self.stock
-        print self.options
+        return output
 
-    def is_stock(self):
-        """
-        Return true if positions is stock and if not false
-        :rtype : bool
-        """
-        return bool(self.stock.quantity and not len(self.options))
+    __str__ = __repr__ = __unicode__
 
-    def is_hedge(self):
-        """
-        Return true if hedge positions (stock + options) and false if not
-        :return: bool
-        """
-        return bool(self.stock.quantity and len(self.options))
 
-    def is_one_leg_option(self):
+class StartLoss(object):
+    """
+    Start loss use for greater or less
+    """
+    def __init__(self, price=0.0, condition=''):
         """
-        Return true if one leg option only positions and false if not
-        :return: bool
+        Set the parameters for max profit class
+        :param price: float
+        :param condition: str
         """
-        return bool(not self.stock.quantity and len(self.options) == 1)
+        self.price = price
+        self.condition = condition
 
-    def is_two_leg_options(self):
+    def __unicode__(self):
         """
-        Return true if two legs option positions and false if not
-        :return: bool
+        Describe the detail of break even
+        :return: str
         """
-        return bool(not self.stock.quantity and len(self.options) == 2)
+        output = '%-40s: %s %.2f' % ('Start loss when price is',
+                                     self.condition, self.price)
+
+        return output
+
+    __str__ = __repr__ = __unicode__
+
+
+class MaxProfit(object):
+    """
+    Max profit can be use for single (trend) or double (range)
+    """
+    def __init__(self, profit=0.0, limit=None, price=0.0, condition=''):
+        """
+        Set the parameters for max profit class
+        :param profit: float
+        :param limit: bool
+        :param price: float
+        :param condition: str
+        """
+        self.limit = limit
+
+        if self.limit:
+            self.profit = profit
+        else:
+            self.profit = float("inf")
+
+        self.price = price
+        self.condition = condition
+
+    def __unicode__(self):
+        """
+        Describe the detail of max profit
+        :return: str
+        """
+        limit = 'LIMITED' if self.limit else 'UNLIMITED'
+
+        output = '%-40s: %+.2f (%s)\n' % ('Max profit for this trade', self.profit, limit)
+        output += '%-40s: %s %.2f' % ('when price move until', self.condition, self.price)
+
+        return output
+
+    __str__ = __repr__ = __unicode__
+
+
+class MaxLoss(object):
+    """
+    Max loss can be use for single (trend) or double (range)
+    """
+    def __init__(self, loss=0.0, limit=None, price=0.0, condition=''):
+        """
+        Set the parameters for max profit class
+        :param loss: float
+        :param limit: bool
+        :param price: float
+        :param condition: str
+        """
+        self.limit = limit
+
+        if self.limit:
+            self.loss = loss
+        else:
+            self.loss = float("inf")
+
+        self.price = price
+        self.condition = condition
+
+    def __unicode__(self):
+        """
+        Describe the detail of max loss
+        :return: str
+        """
+        limit = 'LIMITED' if self.limit else 'UNLIMITED'
+
+        output = '%-40s: %+.2f (%s)\n' % ('Max loss for this trade', self.loss, limit)
+        output += '%-40s: %s %.2f' % ('when price move until', self.condition, self.price)
+
+        return output
+
+    __str__ = __repr__ = __unicode__
+
+
+class BreakEven(object):
+    """
+    Break-even can be use for single (trend) or double (range)
+    """
+    def __init__(self, price=0.0, condition=''):
+        """
+        :param price: float
+        :param condition: str
+        :return:
+        """
+        self.price = price
+        self.condition = condition
+
+    def __unicode__(self):
+        """
+        Describe the detail of break even
+        :return: str
+        """
+        output = '%-40s: %s %.2f' % ('Break-even when price is', self.condition, self.price)
+
+        return output
+
+    __str__ = __repr__ = __unicode__
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

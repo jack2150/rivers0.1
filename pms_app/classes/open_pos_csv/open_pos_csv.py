@@ -136,8 +136,13 @@ class OpenPosCSV(object):
         Check first item is instrument or not
         :rtype : bool
         """
-        words = item.split(' ')
-        return len(words) == 1
+        if item:
+            words = item.split(' ')
+            result = bool(len(words) == 1)
+        else:
+            result = False
+
+        return result
 
     @classmethod
     def is_stock(cls, item):
@@ -145,13 +150,16 @@ class OpenPosCSV(object):
         Check first item is stock or not
         :rtype : bool
         """
-        words = item.split(' ')
+        if item:
+            words = item.split(' ')
 
-        result = False
-        if words[0] not in ('100', '10'):
-            if words[-1] not in ('CALL', 'PUT'):
-                if len(words) > 1:
-                    result = True
+            result = False
+            if words[0] not in ('100', '10'):
+                if words[-1] not in ('CALL', 'PUT'):
+                    if len(words) > 1:
+                        result = True
+        else:
+            result = True
 
         return result
 

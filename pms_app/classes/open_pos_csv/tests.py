@@ -714,4 +714,51 @@ class TestOpenPosCSV(TestCase):
 
             print ''
 
+    def test_ready_multiple_files(self):
+        """
+        Test read on all files inside tos.pos
+        """
+        files = [
+            FILES['tos_positions'] + '2014-08-01-PositionStatement.csv',
+            FILES['tos_positions'] + '2014-08-02-PositionStatement.csv',
+            FILES['tos_positions'] + 'tests/2014-03-10-stock_only.csv',
+            FILES['tos_positions'] + 'tests/2014-03-11-stock_options_combine.csv',
+            FILES['tos_positions'] + 'tests/2014-03-12-one-leg-option.csv',
+            FILES['tos_positions'] + 'tests/2014-03-13-two-legs-options.csv',
+            FILES['tos_positions'] + 'tests/2014-03-14-four-legs-0-8th.csv'
+        ]
+
+        for f in files:
+            open_csv = OpenPosCSV(fname=f)
+
+            pos, ov = open_csv.read()
+
+            print 'fname: %s' % f
+            print 'positions length: %d' % len(pos)
+            print 'overall length: %d\n' % len(ov)
+
+            self.assertGreater(len(pos), 1)
+            self.assertEqual(len(ov), 5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
