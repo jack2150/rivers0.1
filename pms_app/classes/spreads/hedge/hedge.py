@@ -1,4 +1,4 @@
-from spreads import StartProfit, MaxProfit, StartLoss, MaxLoss, BreakEven
+from pms_app.classes.spreads import StartProfit, MaxProfit, StartLoss, MaxLoss, BreakEven
 
 
 class HedgeContext(object):

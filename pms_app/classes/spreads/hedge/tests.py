@@ -1,16 +1,16 @@
-from spreads.identify.test_identify import TestReadyUp
-import spreads
+from pms_app.classes.identify.tests import TestReadyUp
+from pms_app.classes import spreads
 from pms_app import models
 
-import hedge_only
+import hedge
 
 
-class TestHedgeContext(TestReadyUp):
+class TestHedgeSpreads(TestReadyUp):
     def test_hedge_context(self):
         """
         Test hedge context in functions is working
         """
-        hedge_pos = hedge_only.HedgeContext()
+        hedge_pos = hedge.HedgeContext()
 
         hedge_pos.name = 'Test'
 
@@ -39,7 +39,7 @@ class TestHedgeContext(TestReadyUp):
                 print stock
                 print option.__unicode__() + '\n'
 
-                cc = hedge_only.CoveredCall(stock, option)
+                cc = hedge.CoveredCall(stock, option)
 
                 print cc
 
@@ -82,7 +82,7 @@ class TestHedgeContext(TestReadyUp):
                 print stock
                 print option.__unicode__() + '\n'
 
-                pc = hedge_only.ProtectiveCall(stock, option)
+                pc = hedge.ProtectiveCall(stock, option)
 
                 print pc
 
@@ -125,7 +125,7 @@ class TestHedgeContext(TestReadyUp):
                 print stock
                 print option.__unicode__() + '\n'
 
-                cp = hedge_only.CoveredPut(stock, option)
+                cp = hedge.CoveredPut(stock, option)
 
                 print cp
 
@@ -168,7 +168,7 @@ class TestHedgeContext(TestReadyUp):
                 print stock
                 print option.__unicode__() + '\n'
 
-                pp = hedge_only.ProtectivePut(stock, option)
+                pp = hedge.ProtectivePut(stock, option)
 
                 print pp
 

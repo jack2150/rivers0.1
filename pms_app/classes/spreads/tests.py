@@ -2,7 +2,7 @@ from django.test import TestCase
 from spreads import StartProfit, MaxProfit, StartLoss, MaxLoss, BreakEven
 
 
-class TestSpread(TestCase):
+class TestSpreads(TestCase):
     def setUp(self):
         """
         ready up all variables and test class

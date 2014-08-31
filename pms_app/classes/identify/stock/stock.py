@@ -1,4 +1,4 @@
-from stock_only import StockLong, StockShort
+from pms_app.classes.spreads.stock_only import StockLong, StockShort
 
 
 class StockIdentify(object):

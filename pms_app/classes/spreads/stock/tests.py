@@ -1,11 +1,11 @@
-from spreads.identify.test_identify import TestReadyUp
-import spreads
+from pms_app.classes.identify.tests import TestReadyUp
+from pms_app.classes import spreads
 from pms_app import models
 
-from stock_only import StockContext, StockLong, StockShort
+from stock import StockContext, StockLong, StockShort
 
 
-class TestStockOnly(TestReadyUp):
+class TestStockSpreads(TestReadyUp):
     def test_stock_context(self):
         """
         Test stock context in functions is working

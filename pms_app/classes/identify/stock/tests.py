@@ -1,8 +1,8 @@
-from test_identify import TestReadyUp
+from pms_app.classes.identify.tests import TestReadyUp
 from pms_app import models
 
-from stock_identify import StockIdentify
-from stock_only import StockLong, StockShort
+from stock import StockIdentify
+from stock import StockLong, StockShort
 
 
 class TestStockIdentify(TestReadyUp):
@@ -35,48 +35,3 @@ class TestStockIdentify(TestReadyUp):
                       % (price, cls(stock).current_status(price))
 
             print '\n' + '-' * 100 + '\n'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

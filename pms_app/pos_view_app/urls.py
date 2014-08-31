@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url
-from pos_view_app import views
+from pms_app.pos_view_app import views
 
 
 urlpatterns = patterns(

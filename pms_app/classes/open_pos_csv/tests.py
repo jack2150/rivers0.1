@@ -725,7 +725,7 @@ class TestOpenPosCSV(TestCase):
             FILES['tos_positions'] + 'tests/2014-03-11-stock_options_combine.csv',
             FILES['tos_positions'] + 'tests/2014-03-12-one-leg-option.csv',
             FILES['tos_positions'] + 'tests/2014-03-13-two-legs-options.csv',
-            FILES['tos_positions'] + 'tests/2014-03-14-four-legs-0-8th.csv'
+            FILES['tos_positions'] + 'tests/2014-03-17-four-legs-options-0-8th.csv'
         ]
 
         for f in files:
