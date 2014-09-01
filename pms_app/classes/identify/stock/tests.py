@@ -1,8 +1,8 @@
 from pms_app.classes.identify.tests import TestReadyUp
 from pms_app import models
 
-from stock import StockIdentify
-from stock import StockLong, StockShort
+from pms_app.classes.identify.stock import StockIdentify
+from pms_app.classes.spreads.stock import StockLong, StockShort
 
 
 class TestStockIdentify(TestReadyUp):
