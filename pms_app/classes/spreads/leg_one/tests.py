@@ -56,7 +56,7 @@ class TestLegOneSpreads(TestReadyUp):
                 self.assertTrue(long_call.max_loss.limit)
                 self.assertEqual(long_call.max_loss.condition, '<=')
                 self.assertEqual(long_call.max_loss.price, option.strike_price)
-                self.assertEqual(long_call.max_loss.loss, float(option.trade_price))
+                self.assertEqual(long_call.max_loss.loss, float(option.trade_price * option.right))
 
                 for price in [99.86, 120, 90, 99.5, 100]:
                     print 'price: %8.2f, result: %s' % (price, long_call.current_status(price))
@@ -92,7 +92,8 @@ class TestLegOneSpreads(TestReadyUp):
 
                 self.assertTrue(long_call.max_profit.limit)
                 self.assertEqual(long_call.max_profit.condition, '<=')
-                self.assertEqual(long_call.max_profit.profit, float(option.trade_price))
+                self.assertEqual(long_call.max_profit.profit,
+                                 float(option.trade_price * abs(option.quantity) * option.right))
                 self.assertEqual(long_call.max_profit.price, float(option.strike_price))
 
                 self.assertFalse(long_call.max_loss.limit)
@@ -135,13 +136,14 @@ class TestLegOneSpreads(TestReadyUp):
                 self.assertTrue(long_call.max_profit.limit)
                 self.assertEqual(long_call.max_profit.condition, '==')
                 self.assertEqual(long_call.max_profit.profit,
-                                 float(option.strike_price - option.trade_price))
+                                 float((option.strike_price - option.trade_price) * option.right))
                 self.assertEqual(long_call.max_profit.price, 0.0)
 
                 self.assertTrue(long_call.max_loss.limit)
                 self.assertEqual(long_call.max_loss.condition, '>=')
                 self.assertEqual(long_call.max_loss.price, float(option.strike_price))
-                self.assertEqual(long_call.max_loss.loss, float(option.trade_price))
+                self.assertEqual(long_call.max_loss.loss,
+                                 float(option.trade_price * option.quantity * option.right))
 
                 for price in [182.27, 183, 181, 175, 190]:
                     print 'price: %8.2f, result: %s' % (price, long_call.current_status(price))
@@ -177,14 +179,15 @@ class TestLegOneSpreads(TestReadyUp):
 
                 self.assertTrue(long_call.max_profit.limit)
                 self.assertEqual(long_call.max_profit.condition, '>=')
-                self.assertEqual(long_call.max_profit.profit, float(option.trade_price))
+                self.assertEqual(long_call.max_profit.profit,
+                                 float(option.trade_price * abs(option.quantity) * option.right))
                 self.assertEqual(long_call.max_profit.price, float(option.strike_price))
 
                 self.assertTrue(long_call.max_loss.limit)
                 self.assertEqual(long_call.max_loss.condition, '<=')
                 self.assertEqual(long_call.max_loss.price, 0.0)
                 self.assertEqual(long_call.max_loss.loss,
-                                 float(option.strike_price - option.trade_price))
+                                 float((option.strike_price - option.trade_price) * option.right))
 
                 for price in [63.09, 64, 62, 60, 65]:
                     print 'price: %8.2f, result: %s' % (price, long_call.current_status(price))

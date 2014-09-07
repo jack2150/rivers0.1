@@ -138,7 +138,7 @@ class CoveredCall(HedgeContext):
 
         # max loss
         self.max_loss.loss = self.calc_max_loss_amount()
-        self.max_loss.limit = False
+        self.max_loss.limit = True
         self.max_loss.price = 0.0
         self.max_loss.condition = '=='
 
@@ -162,7 +162,7 @@ class CoveredCall(HedgeContext):
         Calculate then return max loss value
         :return: float
         """
-        return float((self.__option.trade_price - self.__stock.trade_price)
+        return float((self.__stock.trade_price - self.__option.trade_price)
                      * self.__stock.quantity)
 
 
@@ -217,8 +217,8 @@ class ProtectiveCall(HedgeContext):
         Calculate then return max loss
         :return: float
         """
-        return float((self.__option.trade_price + self.__option.strike_price
-                     - self.__stock.trade_price) * self.__stock.quantity)
+        return float((self.__stock.trade_price - self.__option.trade_price
+                      - self.__option.strike_price) * self.__stock.quantity)
 
     def calc_max_profit_amount(self):
         """
@@ -263,9 +263,9 @@ class CoveredPut(HedgeContext):
         self.max_profit.condition = '<='
 
         # max loss
-        self.max_loss.loss = float('-inf')
+        self.max_loss.loss = float('inf')
         self.max_loss.limit = False
-        self.max_loss.price = float('+inf')
+        self.max_loss.price = float('inf')
         self.max_loss.condition = '=='
 
     def calc_break_even(self):
@@ -335,5 +335,5 @@ class ProtectivePut(HedgeContext):
         Calculate then return max profit
         :return: float
         """
-        return float((self.__option.strike_price - self.__option.trade_price
-                      - self.__stock.trade_price) * self.__stock.quantity)
+        return float((self.__stock.trade_price + self.__option.trade_price
+                      - self.__option.strike_price) * self.__stock.quantity)

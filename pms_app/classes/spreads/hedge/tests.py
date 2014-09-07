@@ -54,7 +54,7 @@ class TestHedgeSpreads(TestReadyUp):
                 self.assertEqual(cc.break_even.condition, '==')
 
                 self.assertTrue(cc.max_profit.limit)
-                self.assertFalse(cc.max_loss.limit)
+                self.assertTrue(cc.max_loss.limit)
                 self.assertEqual(cc.max_loss.condition, '==')
 
                 self.assertEqual(cc.max_loss.price, 0.0)
@@ -189,7 +189,12 @@ class TestHedgeSpreads(TestReadyUp):
                 self.assertEqual(pp.max_profit.price, float('inf'))
                 self.assertEqual(pp.max_profit.condition, '==')
 
-                for price in [44.29, 45, 44.1, 42.5, 100]:
+                if key == 4:
+                    prices = [52.46, 53, 52, 55, 44]
+                else:
+                    prices = [44.29, 45, 44.1, 42.5, 100]
+
+                for price in prices:
                     print 'price: %8s, result: %s' % (price, pp.current_status(price))
 
                 print ''

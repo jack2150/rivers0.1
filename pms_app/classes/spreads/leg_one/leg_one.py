@@ -152,7 +152,8 @@ class CallLong(LegOne):
         Calculate then return the max loss value
         :return: float
         """
-        return float(self.__option.trade_price * self.__option.quantity)
+        return float(self.__option.trade_price * self.__option.quantity
+                     * self.__option.right)
 
 
 class CallNaked(LegOne):
@@ -204,7 +205,8 @@ class CallNaked(LegOne):
         Calculate then return the break even value
         :return: float
         """
-        return float(abs(self.__option.trade_price * self.__option.quantity))
+        return float(self.__option.trade_price * abs(self.__option.quantity)
+                     * self.__option.right)
 
 
 class PutLong(LegOne):
@@ -239,7 +241,7 @@ class PutLong(LegOne):
         self.max_profit.condition = '=='
 
         # max loss
-        self.max_loss.loss = float(self.__option.trade_price)
+        self.max_loss.loss = self.calc_max_loss()
         self.max_loss.limit = True
         self.max_loss.price = float(self.__option.strike_price)
         self.max_loss.condition = '>='
@@ -253,10 +255,19 @@ class PutLong(LegOne):
 
     def calc_max_profit(self):
         """
+        Calculate then return the max profit value
+        :return: float
+        """
+        return float((self.__option.strike_price - self.__option.trade_price)
+                     * self.__option.quantity * self.__option.right)
+
+    def calc_max_loss(self):
+        """
         Calculate then return the max loss value
         :return: float
         """
-        return float(self.__option.strike_price - self.__option.trade_price)
+        return float(self.__option.trade_price * self.__option.quantity
+                     * self.__option.right)
 
 
 class PutNaked(LegOne):
@@ -285,7 +296,7 @@ class PutNaked(LegOne):
         self.break_even.condition = '=='
 
         # max profit
-        self.max_profit.profit = float(self.__option.trade_price)
+        self.max_profit.profit = self.calc_max_profit()
         self.max_profit.limit = True
         self.max_profit.price = float(self.__option.strike_price)
         self.max_profit.condition = '>='
@@ -303,9 +314,18 @@ class PutNaked(LegOne):
         """
         return float(self.__option.strike_price - self.__option.trade_price)
 
+    def calc_max_profit(self):
+        """
+        Calculate then return the max profit value
+        :return: float
+        """
+        return float(self.__option.trade_price * abs(self.__option.quantity)
+                     * self.__option.right)
+
     def calc_max_loss(self):
         """
         Calculate then return the max loss value
         :return: float
         """
-        return float(self.__option.strike_price - self.__option.trade_price)
+        return float((self.__option.strike_price - self.__option.trade_price)
+                     * abs(self.__option.quantity) * self.__option.right)
