@@ -63,7 +63,7 @@ class HedgeIdentify(object):
     def get_cls(self):
         """
         Return the class name use for analysis PL and etc
-        :return: str
+        :return: type
         """
         if self.long_stock() and self.sell_call_option() and self.is_balance():
             # covered call

@@ -87,7 +87,7 @@ class MaxProfit(object):
         """
         limit = 'LIMITED' if self.limit else 'UNLIMITED'
 
-        output = '%-40s: %+.2f (%s)\n' % ('Max profit for this trade', self.profit, limit)
+        output = '%-40s: %.2f (%s)\n' % ('Max profit for this trade', self.profit, limit)
         output += '%-40s: %s %.2f' % ('when price move until', self.condition, self.price)
 
         return output
@@ -124,7 +124,7 @@ class MaxLoss(object):
         """
         limit = 'LIMITED' if self.limit else 'UNLIMITED'
 
-        output = '%-40s: %+.2f (%s)\n' % ('Max loss for this trade', self.loss, limit)
+        output = '%-40s: %.2f (%s)\n' % ('Max loss for this trade', self.loss, limit)
         output += '%-40s: %s %.2f' % ('when price move until', self.condition, self.price)
 
         return output

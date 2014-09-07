@@ -88,7 +88,7 @@ class TestHedgeIdentify(TestReadyUp):
             )
 
             if cls:
-                print 'current class: %s' % cls
+                print 'current class: %s' % cls.__name__
 
                 inst = cls(stock, option)
 
