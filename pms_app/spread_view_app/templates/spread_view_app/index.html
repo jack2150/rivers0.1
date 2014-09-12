@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block head_js %}
+    <script type="text/javascript" src="{% url 'spread_view_webix_js' %}"></script>
+    <script type="text/javascript" src="{% url 'spread_view_logic_js' %}"></script>
+{% endblock %}
+
+{% block title %}Spreads Default Views{% endblock %}
+
+{% block body %}
+    <script type="text/javascript">
+        var date = "{{ date }}";
+        var stock_url = "{% url 'spread_view_spreads_json' date=date context='stock' %}";
+    </script>
+{% endblock %}

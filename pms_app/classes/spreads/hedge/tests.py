@@ -1,200 +1,770 @@
+# perfect...
 from pms_app.classes.identify.tests import TestReadyUp
-from pms_app.classes import spreads
+from pms_app.classes.spreads import hedge
 from pms_app import models
 
-import hedge
 
-
-class TestHedgeSpreads(TestReadyUp):
-    def test_hedge_context(self):
-        """
-        Test hedge context in functions is working
-        """
-        hedge_pos = hedge.HedgeContext()
-
-        hedge_pos.name = 'Test'
-
-        print hedge_pos
-
-        self.assertEqual(type(hedge_pos.max_profit), spreads.MaxProfit)
-        self.assertEqual(type(hedge_pos.start_profit), spreads.StartProfit)
-        self.assertEqual(type(hedge_pos.max_loss), spreads.MaxLoss)
-        self.assertEqual(type(hedge_pos.start_loss), spreads.StartLoss)
-        self.assertEqual(type(hedge_pos.break_even), spreads.BreakEven)
-
-    def test_covered_call(self):
-        """
-        Test covered call and calculation inside correct
-        """
+class TestHedgeContext(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+        
         self.ready_all(key=2)
+        position = models.Position.objects.first()
+        
+        self.hedge_context = hedge.HedgeContext(position)
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+        self.set_prices = [12.5, 20.7, 33.94, 8.71, 114.81]
+        self.set_conditions = ['>', '<', '==', '<=', '>=']
+        self.test_prices = [13.9, 22.67, 33.94, 7.66, 100.88]
 
-            option = models.PositionOption.objects.filter(position=position).first()
-            """:type: PositionOption"""
-
-            if stock.quantity > 0 and option.contract == 'CALL' and option.quantity < 0:
-                print stock
-                print option.__unicode__() + '\n'
-
-                cc = hedge.CoveredCall(stock, option)
-
-                print cc
-
-                self.assertEqual(cc.name, 'Covered Call')
-                self.assertEquals(
-                    cc.break_even.price,
-                    cc.start_profit.price,
-                    cc.start_loss.price
-                )
-                self.assertEqual(cc.start_profit.condition, '>')
-                self.assertEqual(cc.start_loss.condition, '<')
-                self.assertEqual(cc.break_even.condition, '==')
-
-                self.assertTrue(cc.max_profit.limit)
-                self.assertTrue(cc.max_loss.limit)
-                self.assertEqual(cc.max_loss.condition, '==')
-
-                self.assertEqual(cc.max_loss.price, 0.0)
-                self.assertEqual(cc.max_profit.condition, '>=')
-
-                for price in [71.11, 73.52, 70, 75.5, 0]:
-                    print 'price: %8.2f, result: %s' % (price, cc.current_status(price))
-
-                print ''
-
-    def test_protective_call(self):
+    def test_json(self):
         """
-        Test protective call and all calculation is correct
+        Test json output is working fine
         """
+        print 'json:'
+        print self.hedge_context.json()[:80] + '...\n'
+
+        self.assertTrue(eval(self.hedge_context.json()))
+        self.assertEqual(type(self.hedge_context.json()), str)
+
+    def test_unicode_output(self):
+        """
+        Test unicode output
+        """
+        # check str output and json
+        print 'output:'
+        print self.hedge_context.__unicode__()[:80] + '...\n'
+
+        self.assertEqual(type(self.hedge_context.__unicode__()), str)
+        self.assertIn('Position', self.hedge_context.__unicode__())
+
+    def test_property(self):
+        """
+        Test all property inside class
+        """
+        # check models data exist
+        print 'position id: %d' % self.hedge_context._instrument.id
+        print 'instrument id: %d' % self.hedge_context._position.id
+        print 'stock id: %d' % self.hedge_context._stock.id
+        print 'option id: %d\n' % self.hedge_context._options[0].id
+
+        self.assertTrue(self.hedge_context._position.id)
+        self.assertTrue(self.hedge_context._stock.id)
+        self.assertTrue(self.hedge_context._instrument.id)
+        self.assertEqual(len(self.hedge_context._options), 1)
+        self.assertTrue(self.hedge_context._options[0].id)
+        
+        # check pls is removed
+        self.assertRaises(lambda: self.hedge_context.pls)
+
+    def test_is_profit(self):
+        """
+        Test is profit method
+        """
+        expect_results = [True, False, True, True, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, condition, test_price, expect_result in zipped:
+            self.hedge_context.pl.start_profit.price = set_price
+            self.hedge_context.pl.start_profit.condition = condition
+
+            result = self.hedge_context.is_profit(test_price)
+
+            print 'price: %.2f, condition: %s' % (set_price, condition)
+            print 'test: %.2f, result: %s\n' % (test_price, result)
+
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
+
+    def test_is_loss(self):
+        """
+        Test is loss method
+        """
+        expect_results = [True, False, True, True, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, condition, test_price, expect_result in zipped:
+            self.hedge_context.pl.start_loss.price = set_price
+            self.hedge_context.pl.start_loss.condition = condition
+
+            result = self.hedge_context.is_loss(test_price)
+
+            print 'price: %.2f, condition: %s' % (set_price, condition)
+            print 'test: %.2f, result: %s\n' % (test_price, result)
+
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
+
+    def test_is_even(self):
+        """
+        Test is even method
+        """
+        expect_results = [False, False, True, False, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, _, test_price, expect_result in zipped:
+            self.hedge_context.pl.break_even.price = set_price
+            self.hedge_context.pl.break_even.condition = '=='
+
+            result = self.hedge_context.is_even(test_price)
+
+            print 'price: %.2f, condition: %s' % (set_price, '==')
+            print 'test: %.2f, result: %s\n' % (test_price, result)
+
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
+
+    def test_is_max_profit(self):
+        """
+        Test is max profit method
+        """
+        expect_results = [True, False, True, True, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, condition, test_price, expect_result in zipped:
+            self.hedge_context.pl.max_profit.price = set_price
+            self.hedge_context.pl.max_profit.condition = condition
+
+            result = self.hedge_context.is_max_profit(test_price)
+
+            print 'price: %.2f, condition: %s' % (set_price, condition)
+            print 'test: %.2f, result: %s\n' % (test_price, result)
+
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
+
+    def test_is_max_loss(self):
+        """
+        Test is max loss
+        """
+        expect_results = [True, False, True, True, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, condition, test_price, expect_result in zipped:
+            self.hedge_context.pl.max_loss.price = set_price
+            self.hedge_context.pl.max_loss.condition = condition
+
+            result = self.hedge_context.is_max_loss(test_price)
+
+            print 'price: %.2f, condition: %s' % (set_price, condition)
+            print 'test: %.2f, result: %s\n' % (test_price, result)
+
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
+
+    def test_update_status(self):
+        """
+        Test set status int
+        """
+        attrs = ['is_even', 'is_max_profit', 'is_profit', 'is_max_loss', 'is_loss']
+
+        for attr in attrs:
+            # set method into return true
+            setattr(self.hedge_context, attr, lambda price: True)
+
+            status = self.hedge_context.status
+
+            print 'attr: %s, status: %s' % (attr, status)
+
+            # test status in list
+            self.assertIn(status, ['even', 'max_profit', 'profit', 'max_loss', 'loss'])
+
+            # set method into return false
+            setattr(self.hedge_context, attr, lambda price: False)
+
+
+class TestCoveredCall(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+
         self.ready_all(key=2)
+        position = models.Position.objects.get(symbol='AAPL')
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+        self.covered_call = hedge.CoveredCall(position)
 
-            option = models.PositionOption.objects.filter(position=position).first()
-            """:type: PositionOption"""
+        self.stock_price = float(self.covered_call._stock.trade_price)
+        self.stock_quantity = float(self.covered_call._stock.quantity)
+        self.option_price = float(self.covered_call._options[0].trade_price)
+        self.option_strike = float(self.covered_call._options[0].strike_price)
 
-            if stock.quantity < 0 and option.contract == 'CALL' and option.quantity > 0:
-                print stock
-                print option.__unicode__() + '\n'
-
-                pc = hedge.ProtectiveCall(stock, option)
-
-                print pc
-
-                self.assertEqual(pc.name, 'Protective Call')
-                self.assertEquals(
-                    pc.break_even.price,
-                    pc.start_profit.price,
-                    pc.start_loss.price
-                )
-                self.assertEqual(pc.start_profit.condition, '<')
-                self.assertEqual(pc.start_loss.condition, '>')
-                self.assertEqual(pc.break_even.condition, '==')
-
-                self.assertTrue(pc.max_loss.limit)
-                self.assertEqual(pc.max_loss.condition, '>=')
-
-                self.assertFalse(pc.max_profit.limit)
-                self.assertEqual(pc.max_profit.price, 0.0)
-                self.assertEqual(pc.max_profit.condition, '==')
-
-                for price in [14.65, 13, 14.8, 15.8, 0]:
-                    print 'price: %8.2f, result: %s' % (price, pc.current_status(price))
-
-                print ''
-
-    def test_covered_put(self):
+    def test_property(self):
         """
-        Test covered put and all calculation is correct
+        Test covered call property
         """
+        print 'name: %s' % self.covered_call.name
+        self.assertEqual(self.covered_call.name, 'covered_call')
+
+    def test_calc_break_even(self):
+        """
+        Test calc break even return correct value
+        """
+        calc_result = self.covered_call.calc_break_even()
+
+        print 'break even: %.2f' % calc_result
+
+        expect_result = self.stock_price - self.option_price
+
+        print 'stock_price - option_price = %.2f - %.2f = %s' % (
+            self.stock_price, self.option_price, expect_result
+        )
+
+        self.assertEqual(calc_result, 92.97)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_calc_max_profit(self):
+        """
+        Test calc max profit
+        """
+        calc_result = self.covered_call.calc_max_profit()
+
+        print 'max profit: %.2f' % calc_result
+
+        expect_result = (self.option_price + self.option_strike
+                         - self.stock_price) * self.stock_quantity
+
+        print '(option_price + strike_price - stock_price) * stock_quantity'
+        print '(%.2f + %.2f - %.2f) * %d = %s' % (
+            self.option_price, self.option_strike, self.stock_price,
+            self.stock_quantity, expect_result
+        )
+
+        self.assertEqual(calc_result, 453.0)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_calc_max_loss(self):
+        """
+        Test calc max profit
+        """
+        calc_result = self.covered_call.calc_max_loss()
+
+        print 'max loss: %.2f' % calc_result
+
+        expect_result = (self.stock_price - self.option_price) * self.stock_quantity
+
+        print '(stock_price - option_price) * stock_quantity'
+        print '(%.2f - %.2f) * %d = %s' % (
+            self.stock_price, self.option_price,
+            self.stock_quantity, expect_result
+        )
+
+        self.assertEqual(calc_result, 9297.0)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_pl_break_even(self):
+        """
+        Test pl break even property
+        """
+        print 'price: %.2f' % self.covered_call.pl.break_even.price
+        print 'condition: %s' % self.covered_call.pl.break_even.condition
+
+        self.assertEqual(type(self.covered_call.pl.break_even.price), float)
+        self.assertEqual(self.covered_call.pl.break_even.condition, '==')
+
+    def test_pl_start_profit(self):
+        """
+        Test pl start profit property
+        """
+        print 'price: %.2f' % self.covered_call.pl.start_profit.price
+        print 'condition: %s' % self.covered_call.pl.start_profit.condition
+
+        self.assertEqual(type(self.covered_call.pl.start_profit.price), float)
+        self.assertEqual(self.covered_call.pl.start_profit.condition, '>')
+
+    def test_pl_start_loss(self):
+        """
+        Test pl start loss property
+        """
+        print 'price: %.2f' % self.covered_call.pl.start_loss.price
+        print 'condition: %s' % self.covered_call.pl.start_loss.condition
+
+        self.assertEqual(type(self.covered_call.pl.start_loss.price), float)
+        self.assertEqual(self.covered_call.pl.start_loss.condition, '<')
+
+    def test_pl_max_profit(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.covered_call.pl.max_profit.amount
+        print 'limit: %s' % self.covered_call.pl.max_profit.limit
+        print 'price: %.2f' % self.covered_call.pl.max_profit.price
+        print 'condition: %s' % self.covered_call.pl.max_profit.condition
+
+        self.assertEqual(type(self.covered_call.pl.max_profit.amount), float)
+        self.assertEqual(type(self.covered_call.pl.max_profit.limit), bool)
+        self.assertEqual(type(self.covered_call.pl.max_profit.price), float)
+        self.assertEqual(self.covered_call.pl.max_profit.condition, '>=')
+
+    def test_pl_max_loss(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.covered_call.pl.max_loss.amount
+        print 'limit: %s' % self.covered_call.pl.max_loss.limit
+        print 'price: %.2f' % self.covered_call.pl.max_loss.price
+        print 'condition: %s' % self.covered_call.pl.max_loss.condition
+
+        self.assertEqual(type(self.covered_call.pl.max_loss.amount), float)
+        self.assertEqual(type(self.covered_call.pl.max_loss.limit), bool)
+        self.assertEqual(type(self.covered_call.pl.max_loss.price), float)
+        self.assertEqual(self.covered_call.pl.max_loss.condition, '==')
+
+    def test_json(self):
+        """
+        Test json output is working fine
+        """
+        print 'json:'
+        print self.covered_call.json()[:80] + '...\n'
+
+        self.assertTrue(eval(self.covered_call.json()))
+        self.assertEqual(type(self.covered_call.json()), str)
+
+    def test_unicode_output(self):
+        """
+        Test unicode output
+        """
+        # check str output and json
+        print 'output:'
+        print self.covered_call
+
+        self.assertEqual(type(self.covered_call.__unicode__()), str)
+        self.assertIn('Position', self.covered_call.__unicode__())
+
+
+class TestProtectivePut(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+
         self.ready_all(key=2)
+        position = models.Position.objects.get(symbol='DDD')
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+        self.protective_put = hedge.ProtectivePut(position)
 
-            option = models.PositionOption.objects.filter(position=position).first()
-            """:type: PositionOption"""
+        self.stock_price = float(self.protective_put._stock.trade_price)
+        self.stock_quantity = float(self.protective_put._stock.quantity)
+        self.option_price = float(self.protective_put._options[0].trade_price)
+        self.option_strike = float(self.protective_put._options[0].strike_price)
 
-            if stock.quantity < 0 and option.contract == 'PUT' and option.quantity < 0:
-                print stock
-                print option.__unicode__() + '\n'
-
-                cp = hedge.CoveredPut(stock, option)
-
-                print cp
-
-                self.assertEqual(cp.name, 'Covered Put')
-                self.assertEquals(
-                    cp.break_even.price,
-                    cp.start_profit.price,
-                    cp.start_loss.price
-                )
-                self.assertEqual(cp.start_profit.condition, '<')
-                self.assertEqual(cp.start_loss.condition, '>')
-                self.assertEqual(cp.break_even.condition, '==')
-
-                self.assertTrue(cp.max_profit.limit)
-                self.assertFalse(cp.max_loss.limit)
-                self.assertEqual(cp.max_loss.condition, '==')
-
-                self.assertEqual(cp.max_loss.price, float('inf'))
-                self.assertEqual(cp.max_profit.condition, '<=')
-
-                for price in [49.43, 49, 49.75, 100, 0]:
-                    print 'price: %8s, result: %s' % (price, cp.current_status(price))
-
-                print ''
-
-    def test_protective_put(self):
+    def test_property(self):
         """
-        Test protective put and all calculation is correct
+        Test covered call property
         """
+        print 'name: %s' % self.protective_put.name
+        self.assertEqual(self.protective_put.name, 'protective_put')
+
+    def test_calc_break_even(self):
+        """
+        Test calc break even return correct value
+        """
+        calc_result = self.protective_put.calc_break_even()
+
+        print 'break even: %.2f' % calc_result
+
+        expect_result = self.stock_price + self.option_price
+
+        print 'stock_price + option_price = %.2f + %.2f = %s' % (
+            self.stock_price, self.option_price, expect_result
+        )
+
+        self.assertEqual(calc_result, 52.46)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_calc_max_loss(self):
+        """
+        Test calc max profit
+        """
+        calc_result = self.protective_put.calc_max_loss()
+
+        print 'max loss: %.2f' % calc_result
+
+        expect_result = (self.stock_price + self.option_price
+                         - self.option_strike) * self.stock_quantity
+
+        print '(stock_price + option_price - option_strike) * stock_quantity'
+        print '(%.2f + %.2f - %.2f) * %d = %s' % (
+            self.stock_price, self.option_price, self.option_strike,
+            self.stock_quantity, expect_result
+        )
+
+        self.assertEqual(calc_result, 446.0)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_pl_break_even(self):
+        """
+        Test pl break even property
+        """
+        print 'price: %.2f' % self.protective_put.pl.break_even.price
+        print 'condition: %s' % self.protective_put.pl.break_even.condition
+
+        self.assertEqual(type(self.protective_put.pl.break_even.price), float)
+        self.assertEqual(self.protective_put.pl.break_even.condition, '==')
+
+    def test_pl_start_profit(self):
+        """
+        Test pl start profit property
+        """
+        print 'price: %.2f' % self.protective_put.pl.start_profit.price
+        print 'condition: %s' % self.protective_put.pl.start_profit.condition
+
+        self.assertEqual(type(self.protective_put.pl.start_profit.price), float)
+        self.assertEqual(self.protective_put.pl.start_profit.condition, '>')
+
+    def test_pl_start_loss(self):
+        """
+        Test pl start loss property
+        """
+        print 'price: %.2f' % self.protective_put.pl.start_loss.price
+        print 'condition: %s' % self.protective_put.pl.start_loss.condition
+
+        self.assertEqual(type(self.protective_put.pl.start_loss.price), float)
+        self.assertEqual(self.protective_put.pl.start_loss.condition, '<')
+
+    def test_pl_max_profit(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.protective_put.pl.max_profit.amount
+        print 'limit: %s' % self.protective_put.pl.max_profit.limit
+        print 'price: %.2f' % self.protective_put.pl.max_profit.price
+        print 'condition: %s' % self.protective_put.pl.max_profit.condition
+
+        self.assertEqual(self.protective_put.pl.max_profit.amount, float('inf'))
+        self.assertEqual(type(self.protective_put.pl.max_profit.amount), float)
+        self.assertEqual(type(self.protective_put.pl.max_profit.limit), bool)
+        self.assertEqual(type(self.protective_put.pl.max_profit.price), float)
+        self.assertEqual(self.protective_put.pl.max_profit.condition, '==')
+
+    def test_pl_max_loss(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.protective_put.pl.max_loss.amount
+        print 'limit: %s' % self.protective_put.pl.max_loss.limit
+        print 'price: %.2f' % self.protective_put.pl.max_loss.price
+        print 'condition: %s' % self.protective_put.pl.max_loss.condition
+
+        self.assertEqual(type(self.protective_put.pl.max_loss.amount), float)
+        self.assertEqual(type(self.protective_put.pl.max_loss.limit), bool)
+        self.assertEqual(type(self.protective_put.pl.max_loss.price), float)
+        self.assertEqual(self.protective_put.pl.max_loss.condition, '<=')
+
+    def test_json(self):
+        """
+        Test json output is working fine
+        """
+        print 'json:'
+        print self.protective_put.json()[:80] + '...\n'
+
+        self.assertTrue(eval(self.protective_put.json()))
+        self.assertEqual(type(self.protective_put.json()), str)
+
+    def test_unicode_output(self):
+        """
+        Test unicode output
+        """
+        # check str output and json
+        print 'output:'
+        print self.protective_put
+
+        self.assertEqual(type(self.protective_put.__unicode__()), str)
+        self.assertIn('Position', self.protective_put.__unicode__())
+
+
+class TestCoveredPut(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+
         self.ready_all(key=2)
+        position = models.Position.objects.get(symbol='C')
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+        self.covered_put = hedge.CoveredPut(position)
 
-            option = models.PositionOption.objects.filter(position=position).first()
-            """:type: PositionOption"""
+        self.stock_price = float(self.covered_put._stock.trade_price)
+        self.stock_quantity = float(self.covered_put._stock.quantity)
+        self.option_price = float(self.covered_put._options[0].trade_price)
+        self.option_strike = float(self.covered_put._options[0].strike_price)
 
-            if stock.quantity > 0 and option.contract == 'PUT' and option.quantity > 0:
-                print stock
-                print option.__unicode__() + '\n'
+    def test_property(self):
+        """
+        Test covered call property
+        """
+        print 'name: %s' % self.covered_put.name
+        self.assertEqual(self.covered_put.name, 'covered_put')
 
-                pp = hedge.ProtectivePut(stock, option)
+    def test_calc_break_even(self):
+        """
+        Test calc break even return correct value
+        """
+        calc_result = self.covered_put.calc_break_even()
 
-                print pp
+        print 'break even: %.2f' % calc_result
 
-                self.assertEqual(pp.name, 'Protective Put')
-                self.assertEquals(
-                    pp.break_even.price,
-                    pp.start_profit.price,
-                    pp.start_loss.price
-                )
-                self.assertEqual(pp.start_profit.condition, '>')
-                self.assertEqual(pp.start_loss.condition, '<')
-                self.assertEqual(pp.break_even.condition, '==')
+        expect_result = self.stock_price + self.option_price
 
-                self.assertTrue(pp.max_loss.limit)
-                self.assertFalse(pp.max_profit.limit)
-                self.assertEqual(pp.max_loss.condition, '<=')
+        print 'stock_price + option_price = %.2f + %.2f = %s' % (
+            self.stock_price, self.option_price, expect_result
+        )
 
-                self.assertEqual(pp.max_profit.price, float('inf'))
-                self.assertEqual(pp.max_profit.condition, '==')
+        self.assertEqual(calc_result, 49.43)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
 
-                if key == 4:
-                    prices = [52.46, 53, 52, 55, 44]
-                else:
-                    prices = [44.29, 45, 44.1, 42.5, 100]
+    def test_calc_max_profit(self):
+        """
+        Test calc max profit
+        """
+        calc_result = self.covered_put.calc_max_profit()
 
-                for price in prices:
-                    print 'price: %8s, result: %s' % (price, pp.current_status(price))
+        print 'max profit: %.2f' % calc_result
 
-                print ''
+        expect_result = (self.option_strike - self.option_price
+                         - self.stock_price) * self.stock_quantity
+
+        print '(strike_price - option_price - stock_price) * stock_quantity'
+        print '(%.2f - %.2f - %.2f) * %d = %s' % (
+            self.option_strike, self.option_price, self.stock_price,
+            self.stock_quantity, expect_result
+        )
+
+        self.assertEqual(calc_result, 143.0)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_pl_break_even(self):
+        """
+        Test pl break even property
+        """
+        print 'price: %.2f' % self.covered_put.pl.break_even.price
+        print 'condition: %s' % self.covered_put.pl.break_even.condition
+
+        self.assertEqual(type(self.covered_put.pl.break_even.price), float)
+        self.assertEqual(self.covered_put.pl.break_even.condition, '==')
+
+    def test_pl_start_profit(self):
+        """
+        Test pl start profit property
+        """
+        print 'price: %.2f' % self.covered_put.pl.start_profit.price
+        print 'condition: %s' % self.covered_put.pl.start_profit.condition
+
+        self.assertEqual(type(self.covered_put.pl.start_profit.price), float)
+        self.assertEqual(self.covered_put.pl.start_profit.condition, '<')
+
+    def test_pl_start_loss(self):
+        """
+        Test pl start loss property
+        """
+        print 'price: %.2f' % self.covered_put.pl.start_loss.price
+        print 'condition: %s' % self.covered_put.pl.start_loss.condition
+
+        self.assertEqual(type(self.covered_put.pl.start_loss.price), float)
+        self.assertEqual(self.covered_put.pl.start_loss.condition, '>')
+
+    def test_pl_max_profit(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.covered_put.pl.max_profit.amount
+        print 'limit: %s' % self.covered_put.pl.max_profit.limit
+        print 'price: %.2f' % self.covered_put.pl.max_profit.price
+        print 'condition: %s' % self.covered_put.pl.max_profit.condition
+
+        self.assertEqual(type(self.covered_put.pl.max_profit.amount), float)
+        self.assertEqual(type(self.covered_put.pl.max_profit.limit), bool)
+        self.assertEqual(type(self.covered_put.pl.max_profit.price), float)
+        self.assertEqual(self.covered_put.pl.max_profit.condition, '<=')
+
+    def test_pl_max_loss(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.covered_put.pl.max_loss.amount
+        print 'limit: %s' % self.covered_put.pl.max_loss.limit
+        print 'price: %.2f' % self.covered_put.pl.max_loss.price
+        print 'condition: %s' % self.covered_put.pl.max_loss.condition
+
+        self.assertEqual(type(self.covered_put.pl.max_loss.amount), float)
+        self.assertEqual(type(self.covered_put.pl.max_loss.limit), bool)
+        self.assertEqual(type(self.covered_put.pl.max_loss.price), float)
+        self.assertEqual(self.covered_put.pl.max_loss.price, float('inf'))
+        self.assertEqual(self.covered_put.pl.max_loss.condition, '==')
+
+    def test_json(self):
+        """
+        Test json output is working fine
+        """
+        print 'json:'
+        print self.covered_put.json()[:80] + '...\n'
+
+        self.assertTrue(eval(self.covered_put.json()))
+        self.assertEqual(type(self.covered_put.json()), str)
+
+    def test_unicode_output(self):
+        """
+        Test unicode output
+        """
+        # check str output and json
+        print 'output:'
+        print self.covered_put
+
+        self.assertEqual(type(self.covered_put.__unicode__()), str)
+        self.assertIn('Position', self.covered_put.__unicode__())
+
+
+class TestProtectiveCall(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+
+        self.ready_all(key=2)
+        position = models.Position.objects.get(symbol='BAC')
+
+        self.protective_call = hedge.ProtectiveCall(position)
+
+        self.stock_price = float(self.protective_call._stock.trade_price)
+        self.stock_quantity = float(self.protective_call._stock.quantity)
+        self.option_price = float(self.protective_call._options[0].trade_price)
+        self.option_strike = float(self.protective_call._options[0].strike_price)
+
+    def test_property(self):
+        """
+        Test covered call property
+        """
+        print 'name: %s' % self.protective_call.name
+        self.assertEqual(self.protective_call.name, 'protective_call')
+
+    def test_calc_break_even(self):
+        """
+        Test calc break even return correct value
+        """
+        calc_result = self.protective_call.calc_break_even()
+
+        print 'break even: %.2f' % calc_result
+
+        expect_result = self.stock_price - self.option_price
+
+        print 'stock_price - option_price = %.2f + %.2f = %s' % (
+            self.stock_price, self.option_price, expect_result
+        )
+
+        self.assertEqual(calc_result, 14.65)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_calc_max_profit(self):
+        """
+        Test calc max profit
+        """
+        calc_result = self.protective_call.calc_max_profit()
+
+        print 'max profit: %.2f' % calc_result
+
+        expect_result = (self.option_price - self.stock_price) * self.stock_quantity
+
+        print '(option_price - stock_price) * stock_quantity'
+        print '(%.2f - %.2f) * %d = %s' % (
+            self.option_strike, self.option_price,
+            self.stock_quantity, expect_result
+        )
+
+        self.assertEqual(calc_result, 1465.0)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_calc_max_loss(self):
+        """
+        Test calc max profit
+        """
+        calc_result = self.protective_call.calc_max_loss()
+
+        print 'max loss: %.2f' % calc_result
+
+        expect_result = (self.stock_price - self.option_price
+                         - self.option_strike) * self.stock_quantity
+        print '(stock_price - option_price - option_strike) * stock_quantity'
+        print '(%.2f - %.2f - %.2f) * %d = %s' % (
+            self.stock_price, self.option_price, self.option_strike,
+            self.stock_quantity, expect_result
+        )
+
+        self.assertEqual(calc_result, 35.0)
+        self.assertEqual(calc_result, round(expect_result, 2))
+        self.assertEqual(type(calc_result), float)
+
+    def test_pl_break_even(self):
+        """
+        Test pl break even property
+        """
+        print 'price: %.2f' % self.protective_call.pl.break_even.price
+        print 'condition: %s' % self.protective_call.pl.break_even.condition
+
+        self.assertEqual(type(self.protective_call.pl.break_even.price), float)
+        self.assertEqual(self.protective_call.pl.break_even.condition, '==')
+
+    def test_pl_start_profit(self):
+        """
+        Test pl start profit property
+        """
+        print 'price: %.2f' % self.protective_call.pl.start_profit.price
+        print 'condition: %s' % self.protective_call.pl.start_profit.condition
+
+        self.assertEqual(type(self.protective_call.pl.start_profit.price), float)
+        self.assertEqual(self.protective_call.pl.start_profit.condition, '<')
+
+    def test_pl_start_loss(self):
+        """
+        Test pl start loss property
+        """
+        print 'price: %.2f' % self.protective_call.pl.start_loss.price
+        print 'condition: %s' % self.protective_call.pl.start_loss.condition
+
+        self.assertEqual(type(self.protective_call.pl.start_loss.price), float)
+        self.assertEqual(self.protective_call.pl.start_loss.condition, '>')
+
+    def test_pl_max_profit(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.protective_call.pl.max_profit.amount
+        print 'limit: %s' % self.protective_call.pl.max_profit.limit
+        print 'price: %.2f' % self.protective_call.pl.max_profit.price
+        print 'condition: %s' % self.protective_call.pl.max_profit.condition
+
+        self.assertEqual(type(self.protective_call.pl.max_profit.amount), float)
+        self.assertEqual(type(self.protective_call.pl.max_profit.limit), bool)
+        self.assertEqual(type(self.protective_call.pl.max_profit.price), float)
+        self.assertEqual(self.protective_call.pl.max_profit.price, 0.0)
+        self.assertEqual(self.protective_call.pl.max_profit.condition, '==')
+
+    def test_pl_max_loss(self):
+        """
+        Test pl max profit property
+        """
+        print 'amount: %.2f' % self.protective_call.pl.max_loss.amount
+        print 'limit: %s' % self.protective_call.pl.max_loss.limit
+        print 'price: %.2f' % self.protective_call.pl.max_loss.price
+        print 'condition: %s' % self.protective_call.pl.max_loss.condition
+
+        self.assertEqual(type(self.protective_call.pl.max_loss.amount), float)
+        self.assertEqual(type(self.protective_call.pl.max_loss.limit), bool)
+        self.assertEqual(type(self.protective_call.pl.max_loss.price), float)
+        self.assertEqual(self.protective_call.pl.max_loss.condition, '>=')
+
+    def test_json(self):
+        """
+        Test json output is working fine
+        """
+        print 'json:'
+        print self.protective_call.json()[:80] + '...\n'
+
+        self.assertTrue(eval(self.protective_call.json()))
+        self.assertEqual(type(self.protective_call.json()), str)
+
+    def test_unicode_output(self):
+        """
+        Test unicode output
+        """
+        # check str output and json
+        print 'output:'
+        print self.protective_call
+
+        self.assertEqual(type(self.protective_call.__unicode__()), str)
+        self.assertIn('Position', self.protective_call.__unicode__())

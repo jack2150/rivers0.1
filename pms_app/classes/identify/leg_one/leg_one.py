@@ -53,18 +53,3 @@ class LegOneIdentify(object):
             self.cls_name = None
 
         return self.cls_name
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

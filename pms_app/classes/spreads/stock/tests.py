@@ -1,189 +1,338 @@
+# perfect...
 from pms_app.classes.identify.tests import TestReadyUp
-from pms_app.classes import spreads
+from pms_app.classes.spreads import stock
 from pms_app import models
 
-from stock import StockContext, StockLong, StockShort
 
+class TestStockContext(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
 
-class TestStockSpreads(TestReadyUp):
-    def test_stock_context(self):
-        """
-        Test stock context in functions is working
-        """
         self.ready_all(key=1)
+        position = models.Position.objects.first()
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
+        self.stock_context = stock.StockContext(position)
 
-            if stock.quantity > 0:
-                stock_pos = StockLong(stock=stock)
-            else:
-                stock_pos = StockShort(stock=stock)
+        self.set_prices = [12.5, 20.7, 33.94, 8.71, 114.81]
+        self.set_conditions = ['>', '<', '==', '<=', '>=']
+        self.test_prices = [1.9, 22.67, 33.94, 7.66, 100.88]
 
-            print stock_pos
-
-            self.assertEqual(type(stock_pos.max_profit), spreads.MaxProfit)
-            self.assertEqual(type(stock_pos.start_profit), spreads.StartProfit)
-            self.assertEqual(type(stock_pos.max_loss), spreads.MaxLoss)
-            self.assertEqual(type(stock_pos.start_loss), spreads.StartLoss)
-            self.assertEqual(type(stock_pos.break_even), spreads.BreakEven)
-
-    def test_is_profit_is_loss(self):
+    def test_json(self):
         """
-        Test is profit and is loss condition for stock
+        Test json output is working fine
         """
-        start_prices = [24.3, 55.97, 115.65, 73, 248.60]
-        profit_conditions = ['>', '>', '<', '<', '>']
-        loss_conditions = ['<', '<', '>', '>', '<']
-        current_prices = [31.35, 40.98, 100, 155, 265.5]
+        print 'json:'
+        print self.stock_context.json()[:80] + '...\n'
 
-        tests = zip(start_prices, profit_conditions, loss_conditions, current_prices)
+        self.assertTrue(eval(self.stock_context.json()))
+        self.assertEqual(type(self.stock_context.json()), str)
 
-        for start_price, profit_cond, loss_cond, current_price in tests:
-            stock_context = StockContext()
+    def test_unicode_output(self):
+        """
+        Test unicode output
+        """
+        # check str output and json
+        print 'output:'
+        print self.stock_context.__unicode__()[:80] + '...\n'
 
-            stock_context.start_profit.price = start_price
-            stock_context.start_profit.condition = profit_cond
+        self.assertEqual(type(self.stock_context.__unicode__()), str)
+        self.assertIn('Position', self.stock_context.__unicode__())
 
-            stock_context.start_loss.price = start_price
-            stock_context.start_loss.condition = loss_cond
+    def test_property(self):
+        """
+        Test all property inside class
+        """
+        # check models data exist
+        print 'position id: %d' % self.stock_context._instrument.id
+        print 'instrument id: %d' % self.stock_context._position.id
+        print 'stock id: %d' % self.stock_context._stock.id
 
-            profit_result = stock_context.is_profit(price=current_price)
-            loss_result = stock_context.is_loss(price=current_price)
+        # check models data exist
+        self.assertTrue(self.stock_context._position.id)
+        self.assertTrue(self.stock_context._stock.id)
+        self.assertTrue(self.stock_context._instrument.id)
+        self.assertEqual(len(self.stock_context._options), 1)
+        self.assertFalse(self.stock_context._options[0].id)
 
-            print 'Current Price: %s, Condition: %s, Start Price: %s' \
-                  % (current_price, profit_cond, start_price)
+    def test_is_profit(self):
+        """
+        Test is profit method
+        """
+        expect_results = [True, False, True, True, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, condition, test_price, expect_result in zipped:
+            self.stock_context.pl.start_profit.price = set_price
+            self.stock_context.pl.start_profit.condition = condition
 
-            print 'Profit Result: %s' % profit_result
-            print 'Loss Result: %s\n' % loss_result
+            result = self.stock_context.is_profit(test_price)
 
-            self.assertEqual(type(profit_result), bool)
-            self.assertEqual(type(loss_result), bool)
+            print 'price: %.2f, condition: %s' % (set_price, condition)
+            print 'test: %.2f, result: %s\n' % (test_price, result)
 
-            self.assertNotEqual(profit_result, loss_result)
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
+
+    def test_is_loss(self):
+        """
+        Test is loss method
+        """
+        expect_results = [True, False, True, True, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, condition, test_price, expect_result in zipped:
+            self.stock_context.pl.start_loss.price = set_price
+            self.stock_context.pl.start_loss.condition = condition
+
+            result = self.stock_context.is_loss(test_price)
+
+            print 'price: %.2f, condition: %s' % (set_price, condition)
+            print 'test: %.2f, result: %s\n' % (test_price, result)
+
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
 
     def test_is_even(self):
         """
-        Test is even condition for stock
+        Test is even method
         """
-        start_prices = [24.3, 55.97, 115.65, 73, 248.6]
-        conditions = ['==', '==', '==', '==', '==']
-        current_prices = [31.35, 55.97, 100, 73, 248.6]
+        expect_results = [False, False, True, False, False]
+        zipped = zip(self.set_prices, self.set_conditions, self.test_prices, expect_results)
+        for set_price, _, test_price, expect_result in zipped:
+            self.stock_context.pl.break_even.price = set_price
+            self.stock_context.pl.break_even.condition = '=='
 
-        tests = zip(start_prices, conditions, current_prices)
+            result = self.stock_context.is_even(test_price)
 
-        for start_price, condition, current_price in tests:
-            stock_context = StockContext()
+            print 'price: %.2f, condition: %s' % (set_price, '==')
+            print 'test: %.2f, result: %s\n' % (test_price, result)
 
-            stock_context.break_even.price = start_price
-            stock_context.break_even.condition = condition
+            self.assertEqual(result, expect_result)
+            self.assertEqual(type(result), bool)
 
-            result = stock_context.is_even(price=current_price)
-
-            print 'Current Price: %s, Condition: %s, Start Price: %s' \
-                  % (current_price, condition, start_price)
-
-            print 'Break-even Result: %s\n' % result
-
-    def test_current_status(self):
+    def test_update_status(self):
         """
-        Test current status for stock position
+        Test set status int
         """
-        start_prices = [24.3, 55.97, 66.6, 99.8, 73, 173, 248.60]
-        profit_conditions = ['>', '>', '<', '>', '<', '>', '>']
-        loss_conditions = ['<', '<', '>', '<', '>', '<', '<']
-        current_prices = [31.35, 40.98, 66.6, 100, 155, 173, 265.5]
+        attrs = ['is_even', 'is_profit', 'is_loss']
 
-        tests = zip(start_prices, profit_conditions, loss_conditions, current_prices)
+        for attr in attrs:
+            # set method into return true
+            setattr(self.stock_context, attr, lambda price: True)
 
-        for start_price, profit_cond, loss_cond, current_price in tests:
-            stock_context = StockContext()
+            status = self.stock_context.status
 
-            stock_context.start_profit.price = start_price
-            stock_context.start_profit.condition = profit_cond
+            print 'attr: %s, status: %s' % (attr, status)
 
-            stock_context.start_loss.price = start_price
-            stock_context.start_loss.condition = loss_cond
+            # test status in list
+            self.assertIn(status, ['even', 'profit', 'loss'])
 
-            stock_context.break_even.price = start_price
-            stock_context.break_even.condition = '=='
+            # set method into return false
+            setattr(self.stock_context, attr, lambda price: False)
 
-            status = stock_context.current_status(price=current_price)
 
-            print 'Current Price: %s, Cond P: %s, Cond L: %s, Start Price: %s' \
-                  % (current_price, profit_cond, loss_cond, start_price)
-
-            print 'Current Status: %s\n' % status
-
-            self.assertEqual(type(status), str)
-            self.assertIn(status, ('Even', 'Profit', 'Loss'))
-
-    def test_stock_long(self):
-        """
-        Test long stock position that have correct format and values
-        """
+class TestStockLong(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
         self.ready_all(key=1)
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+        self.stock = models.PositionStock.objects.filter(quantity__gte=0).first()
 
-            if stock.quantity > 0:
-                print 'Symbol: %s' % position.symbol
-                stock_long = StockLong(stock=stock)
+        print 'Symbol: %s\n' % self.stock.position.symbol
 
-                print stock_long
+        self.stock_long = stock.StockLong(self.stock.position)
 
-                self.assertEqual(stock_long.start_profit.price, stock_long.break_even.price)
-                self.assertEqual(stock_long.start_profit.condition, '>')
-
-                self.assertEqual(stock_long.max_profit.profit, 0)
-                self.assertEqual(stock_long.max_profit.limit, False)
-                self.assertEqual(stock_long.max_profit.price, float('inf'))
-                self.assertEqual(stock_long.max_profit.condition, '==')
-
-                self.assertEqual(stock_long.start_loss.price, stock_long.break_even.price)
-                self.assertEqual(stock_long.start_loss.condition, '<')
-
-                self.assertLess(stock_long.max_loss.loss, 0)
-                self.assertEqual(stock_long.max_loss.limit, True)
-                self.assertLess(stock_long.max_loss.price, stock_long.break_even.price)
-                self.assertEqual(stock_long.max_loss.condition, '==')
-
-                self.assertEqual(stock_long.break_even.price, float(stock.trade_price))
-                self.assertEqual(stock_long.break_even.condition, '==')
-
-    def test_stock_short(self):
+    def test_property(self):
         """
-        Test long stock position that have correct format and values
+        Test stock short spread got correct property
         """
+        print 'long stock property...'
+        print 'name: %s, context: %s' % (
+            self.stock_long.name,
+            self.stock_long.context
+        )
+
+        self.assertEqual(self.stock_long.context, 'stock')
+        self.assertEqual(self.stock_long.name, 'long_stock')
+
+    def test_start_profit(self):
+        """
+        Test start profit in short stock spread
+        """
+        print 'start profit...'
+        print 'price: %.2f, condition: %s' % (
+            self.stock_long.pl.start_profit.price,
+            self.stock_long.pl.start_profit.condition
+        )
+
+        self.assertEqual(self.stock_long.pl.start_profit.price,
+                         self.stock_long.pl.break_even.price)
+        self.assertEqual(self.stock_long.pl.start_profit.condition,
+                         '>')
+
+    def test_max_profit(self):
+        """
+        Test max profit in short stock spread
+        """
+        print 'max profit...'
+        print 'loss: %.2f, limit: %s, price: %.2f, condition: %s' % (
+            self.stock_long.pl.max_profit.amount,
+            self.stock_long.pl.max_profit.limit,
+            self.stock_long.pl.max_profit.price,
+            self.stock_long.pl.max_profit.condition
+        )
+
+        self.assertEqual(self.stock_long.pl.max_profit.amount, 0)
+        self.assertEqual(self.stock_long.pl.max_profit.limit, False)
+        self.assertEqual(self.stock_long.pl.max_profit.price, float('inf'))
+        self.assertEqual(self.stock_long.pl.max_profit.condition, '==')
+
+    def test_start_loss(self):
+        """
+        Test start loss in short stock
+        """
+        print 'start loss...'
+        print 'price: %.2f, condition: %s' % (
+            self.stock_long.pl.start_loss.price,
+            self.stock_long.pl.start_loss.condition
+        )
+
+        self.assertEqual(self.stock_long.pl.start_loss.price,
+                         self.stock_long.pl.break_even.price)
+        self.assertEqual(self.stock_long.pl.start_loss.condition,
+                         '<')
+
+    def test_max_loss(self):
+        """
+        Test max loss in short stock
+        """
+        print 'max loss...'
+        print 'loss: %.2f, limit: %s, price: %.2f, condition: %s' % (
+            self.stock_long.pl.max_loss.amount,
+            self.stock_long.pl.max_loss.limit,
+            self.stock_long.pl.max_loss.price,
+            self.stock_long.pl.max_loss.condition
+        )
+
+        self.assertEqual(self.stock_long.pl.max_loss.amount,
+                         float(self.stock.trade_price * abs(self.stock.quantity)))
+        self.assertEqual(self.stock_long.pl.max_loss.limit, True)
+        self.assertLess(self.stock_long.pl.max_loss.price, self.stock_long.pl.break_even.price)
+        self.assertEqual(self.stock_long.pl.max_loss.condition, '==')
+
+    def test_break_even(self):
+        """
+        Test break even in short stock
+        """
+        print 'break even...'
+        print 'price: %.2f, condition: %s' % (
+            self.stock_long.pl.break_even.price,
+            self.stock_long.pl.break_even.condition
+        )
+
+        self.assertEqual(self.stock_long.pl.break_even.price,
+                         float(self.stock.trade_price))
+        self.assertEqual(self.stock_long.pl.break_even.condition, '==')
+
+
+class TestStockShort(TestReadyUp):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+
         self.ready_all(key=1)
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+        self.stock = models.PositionStock.objects.filter(quantity__lte=0).first()
 
-            if stock.quantity < 0:
-                print 'Symbol: %s' % position.symbol
-                stock_short = StockShort(stock=stock)
+        print 'Symbol: %s\n' % self.stock.position.symbol
 
-                print stock_short
+        self.stock_short = stock.StockShort(self.stock.position)
 
-                self.assertEqual(stock_short.start_profit.price, stock_short.break_even.price)
-                self.assertEqual(stock_short.start_profit.condition, '<')
+    def test_property(self):
+        """
+        Test stock short spread got correct property
+        """
+        print 'short stock property...'
+        print 'name: %s, context: %s' % (
+            self.stock_short.name,
+            self.stock_short.context
+        )
 
-                self.assertEqual(stock_short.max_profit.profit, stock.trade_price * stock.quantity)
-                self.assertEqual(stock_short.max_profit.limit, True)
-                self.assertLess(stock_short.max_profit.price, stock_short.break_even.price)
-                self.assertEqual(stock_short.max_profit.condition, '==')
+        self.assertEqual(self.stock_short.context, 'stock')
+        self.assertEqual(self.stock_short.name, 'short_stock')
 
-                self.assertEqual(stock_short.start_loss.price, stock_short.break_even.price)
-                self.assertEqual(stock_short.start_loss.condition, '>')
+    def test_start_profit(self):
+        """
+        Test start profit in short stock spread
+        """
+        print 'start profit...'
+        print 'price: %.2f, condition: %s' % (
+            self.stock_short.pl.start_profit.price,
+            self.stock_short.pl.start_profit.condition
+        )
 
-                self.assertEqual(stock_short.max_loss.loss, float('inf'))
-                self.assertEqual(stock_short.max_loss.limit, False)
-                self.assertGreater(stock_short.max_loss.price, stock_short.break_even.price)
-                self.assertEqual(stock_short.max_loss.condition, '==')
+        self.assertEqual(self.stock_short.pl.start_profit.price,
+                         self.stock_short.pl.break_even.price)
+        self.assertEqual(self.stock_short.pl.start_profit.condition,
+                         '<')
 
-                self.assertEqual(stock_short.break_even.price, float(stock.trade_price))
-                self.assertEqual(stock_short.break_even.condition, '==')
+    def test_max_profit(self):
+        """
+        Test max profit in short stock spread
+        """
+        print 'max profit...'
+        print 'loss: %.2f, limit: %s, price: %.2f, condition: %s' % (
+            self.stock_short.pl.max_profit.amount,
+            self.stock_short.pl.max_profit.limit,
+            self.stock_short.pl.max_profit.price,
+            self.stock_short.pl.max_profit.condition
+        )
+
+        self.assertEqual(self.stock_short.pl.max_profit.amount,
+                         float(self.stock.trade_price * abs(self.stock.quantity)))
+        self.assertEqual(self.stock_short.pl.max_profit.limit, True)
+        self.assertLess(self.stock_short.pl.max_profit.price, self.stock_short.pl.break_even.price)
+        self.assertEqual(self.stock_short.pl.max_profit.condition, '==')
+
+    def test_start_loss(self):
+        """
+        Test start loss in short stock
+        """
+        print 'start loss...'
+        print 'price: %.2f, condition: %s' % (
+            self.stock_short.pl.start_loss.price,
+            self.stock_short.pl.start_loss.condition
+        )
+
+        self.assertEqual(self.stock_short.pl.start_loss.price,
+                         self.stock_short.pl.break_even.price)
+        self.assertEqual(self.stock_short.pl.start_loss.condition, '>')
+
+    def test_max_loss(self):
+        """
+        Test max loss in short stock
+        """
+        print 'max loss...'
+        print 'loss: %.2f, limit: %s, price: %.2f, condition: %s' % (
+            self.stock_short.pl.max_loss.amount,
+            self.stock_short.pl.max_loss.limit,
+            self.stock_short.pl.max_loss.price,
+            self.stock_short.pl.max_loss.condition
+        )
+
+        self.assertEqual(self.stock_short.pl.max_loss.amount, float('inf'))
+        self.assertEqual(self.stock_short.pl.max_loss.limit, False)
+        self.assertGreater(self.stock_short.pl.max_loss.price,
+                           self.stock_short.pl.break_even.price)
+        self.assertEqual(self.stock_short.pl.max_loss.condition, '==')
+
+    def test_break_even(self):
+        """
+        Test break even in short stock
+        """
+        print 'break even...'
+        print 'price: %.2f, condition: %s' % (
+            self.stock_short.pl.break_even.price,
+            self.stock_short.pl.break_even.condition
+        )
+
+        self.assertEqual(self.stock_short.pl.break_even.price,
+                         float(self.stock.trade_price))
+        self.assertEqual(self.stock_short.pl.break_even.condition, '==')

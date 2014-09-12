@@ -24,7 +24,7 @@ def index(request):
         'files': OpenDir().to_json(),
     }
 
-    return render(request, 'import/index.html', parameters)
+    return render(request, 'pos_import_app/index.html', parameters)
 
 
 def complete(request, date=None):
@@ -106,7 +106,7 @@ def webix_js(request):
     :param request:
     :return: render
     """
-    return render(request, 'import/webix.js',
+    return render(request, 'pos_import_app/webix.js',
                   content_type='application/javascript')
 
 
@@ -116,7 +116,7 @@ def logic_js(request):
     :param request:
     :return: render
     """
-    return render(request, 'import/logic.js',
+    return render(request, 'pos_import_app/logic.js',
                   content_type='application/javascript')
 
 

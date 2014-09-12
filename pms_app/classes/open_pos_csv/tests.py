@@ -740,6 +740,16 @@ class TestOpenPosCSV(TestCase):
             self.assertGreater(len(pos), 1)
             self.assertEqual(len(ov), 5)
 
+    def test_2014_09_06_file(self):
+        f = FILES['tos_positions'] + '2014-09-06-PositionStatement.csv'
+
+        open_csv = OpenPosCSV(fname=f)
+
+        pos, ov = open_csv.read()
+
+        print 'fname: %s' % f
+        print 'positions length: %d' % len(pos)
+        print 'overall length: %d\n' % len(ov)
 
 
 

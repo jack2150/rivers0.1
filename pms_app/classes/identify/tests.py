@@ -68,13 +68,13 @@ class TestReadyUp(TestCase):
         Ready specific files or all files for testing
         """
         test_fname = [
-            '2014-03-07-closed-only.csv',
-            '2014-03-10-stock_only.csv',
-            '2014-03-11-stock_options_combine.csv',
-            '2014-03-12-one-leg-option.csv',
-            '2014-03-13-two-legs-options.csv',
-            '2014-03-14-three-legs-options.csv',
-            '2014-03-17-four-legs-options-0-8th.csv'
+            '2014-03-07-closed.csv',
+            '2014-03-10-stock.csv',
+            '2014-03-11-hedge.csv',
+            '2014-03-12-one-leg.csv',
+            '2014-03-13-two-legs.csv',
+            '2014-03-14-three-legs.csv',
+            '2014-03-17-four-legs-part-1.csv'
         ]
 
         if key is not None:

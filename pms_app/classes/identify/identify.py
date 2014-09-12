@@ -1,4 +1,7 @@
 from pms_app.models import PositionStock, PositionOption
+from pms_app.classes.identify.stock import StockIdentify
+from pms_app.classes.identify.hedge import HedgeIdentify
+from pms_app.classes.identify.leg_one import LegOneIdentify
 
 
 class Identify(object):
@@ -12,11 +15,39 @@ class Identify(object):
 
         self.options = list()
         """:type: list of PositionOption"""
+
         options = PositionOption.objects.filter(position=position)
         for option in options.exclude(quantity=0).all():
             self.options.append(option)
 
-        self.name = None
+        self.__spread = None
+
+    def get_spread(self):
+        """
+        Return string for identify spreads type
+        :return: str
+        """
+        if self.__spread is None:
+            self.identify()
+
+        return self.__spread
+
+    def set_spread(self, x):
+        """
+        Set string into spreads type name
+        :param x: str
+        """
+        self.__spread = x
+
+    spread = property(fget=get_spread, fset=set_spread)
+
+    def get_first_option(self):
+        """
+        Return first item in options list
+        :return: PositionOption
+        """
+        # todo: no test yet
+        return self.options[0]
 
     def identify(self):
         """
@@ -26,21 +57,39 @@ class Identify(object):
         3. then go to strategy to define pl and etc
         """
         if self.is_closed():
-            self.name = 'Position Closed'
+            #self.__spread = 'Position Closed'
+            self.__spread = None
+
         elif self.is_stock():
-            self.name = 'Stock Position'
+            #self.__name = 'Stock Position'
+            cls = StockIdentify(self.stock).get_cls()
+            self.__spread = cls(self.stock)
+
         elif self.is_hedge():
-            self.name = 'Hedge Position'
+            #self.__name = 'Hedge Position'
+            cls = HedgeIdentify(self.stock, self.get_first_option()).get_cls()
+            self.__spread = cls(self.stock, self.get_first_option())
+
         elif self.is_one_leg_option():
-            self.name = 'One Leg Options'
+            #self.__name = 'One Leg Options'
+            cls = LegOneIdentify(self.get_first_option()).get_cls()
+            self.__spread = cls(self.get_first_option())
+
         elif self.is_two_legs_options():
-            self.name = 'Two Legs Options'
+            #self.__spread = 'Two Legs Options'
+            self.__spread = None
+
         elif self.is_three_legs_options():
-            self.name = 'Three Legs Options'
+            #self.__spread = 'Three Legs Options'
+            self.__spread = None
+
         elif self.is_four_legs_options():
-            self.name = 'Four Legs Options'
+            #self.__spread = 'Four Legs Options'
+            self.__spread = None
+
         else:
-            self.name = 'Custom Options'
+            #self.__spread = 'Custom Options'
+            self.__spread = None
 
     def is_closed(self):
         """

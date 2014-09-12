@@ -32,7 +32,7 @@
         <option value="$MODULE_DIR$/pms_app/templates" />
         <option value="$MODULE_DIR$/pms_app/pos_view_app/templates" />
         <option value="$MODULE_DIR$/pms_app/pos_import_app/templates" />
-        <option value="$MODULE_DIR$/base_app/template" />
+        <option value="$MODULE_DIR$/pms_app/spread_view_app/template" />
       </list>
     </option>
   </component>

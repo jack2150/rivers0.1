@@ -1,9 +1,10 @@
+# perfect...
 from django.test import TestCase
-import models
+from pms_app import models
+from pprint import pprint
 
 
-# Create your tests here.
-class TestModels(TestCase):
+class TestSetUp(TestCase):
     def setUp(self):
         """
         ready up all variables and test class
@@ -18,6 +19,8 @@ class TestModels(TestCase):
         """
         print '\n' + '=' * 100 + '\n\n'
 
+
+class TestSetUpModel(TestSetUp):
     def ready_pos(self):
         """
         Ready up pos object and use as foreign key
@@ -33,38 +36,50 @@ class TestModels(TestCase):
 
         return pos
 
-    def test_pos_set_save_json(self):
-        """
-        Test set dict data into pos
-        """
-        items = {
+
+class TestPosition(TestSetUp):
+    def setUp(self):
+        TestSetUp.setUp(self)
+
+        self.items = {
             'symbol': 'SPX',
             'company': 'SPX',
             'date': '2014-08-01',
         }
 
-        pos = models.Position(**items)
-        pos.save()
-        print 'Pos saved!\n'
+        self.pos = models.Position(**self.items)
 
-        print 'pos id: %d' % pos.id
-        print 'pos in json: %s' % pos
+    def test_save(self):
+        """
+        Test set dict data into pos
+        """
+        self.pos.save()
 
-        self.assertTrue(pos.id)
+        print 'Position saved!'
+        print 'pos id: %d' % self.pos.id
 
-        json = pos.__unicode__()
+        self.assertTrue(self.pos.id)
+
+    def test_json(self):
+        """
+        Test output json format data
+        """
+        print 'pos in json: %s' % self.pos
+
+        json = self.pos.__unicode__()
         self.assertEqual('{', json[0])
         self.assertEqual('}', json[-1])
 
-        for key, item in items.items():
+        for key, item in self.items.items():
             self.assertIn(key, json)
             self.assertIn(item, json)
 
-    def test_pos_instrument_set_save_json(self):
-        """
-        Test set dict data into pos instrument
-        """
-        items = {
+
+class TestPositionInstrument(TestSetUpModel):
+    def setUp(self):
+        TestSetUpModel.setUp(self)
+
+        self.items = {
             'name': 'SPX',
             'mark_change': 0.0,
             'pl_open': -50.0,
@@ -81,28 +96,37 @@ class TestModels(TestCase):
             'trade_price': 0.0
         }
 
-        pos_ins = models.PositionInstrument()
-        pos_ins.position = self.ready_pos()
-        pos_ins.set_dict(items)
-        pos_ins.save()
-        print 'PosIns saved!\n'
+        self.pos_ins = models.PositionInstrument()
+        self.pos_ins.position = self.ready_pos()
+        self.pos_ins.set_dict(self.items)
 
-        json = pos_ins.__unicode__()
+    def test_save(self):
+        """
+        Test set dict data into pos instrument
+        """
+        self.pos_ins.save()
+        print 'PositionInstrument saved!\n'
+        print 'pos id: %d' % self.pos_ins.id
+        self.assertTrue(self.pos_ins.id)
 
-        print 'pos id: %d' % pos_ins.id
+    def test_json(self):
+        """
+        Test output json data format
+        """
+        json = self.pos_ins.__unicode__()
+
         print 'pos in json:'
-        print json[:102] + '\n' + json[102:]
-
-        self.assertTrue(pos_ins.id)
+        print json[:80] + '...'
 
         self.assertEqual('{', json[0])
         self.assertEqual('}', json[-1])
 
-    def test_pos_stock_set_save_json(self):
-        """
-        Test set dict data into pos stock
-        """
-        items = {
+
+class TestPositionStock(TestSetUpModel):
+    def setUp(self):
+        TestSetUpModel.setUp(self)
+
+        self.items = {
             'mark_change': -5.87,
             'name': '3 D SYSTEMS CORP COM',
             'pl_open': 0.0,
@@ -119,28 +143,34 @@ class TestModels(TestCase):
             'trade_price': 0.0
         }
 
-        pos_stock = models.PositionStock()
-        pos_stock.position = self.ready_pos()
-        pos_stock.set_dict(items)
-        pos_stock.save()
-        print 'PosStock saved!\n'
+        self.pos_stock = models.PositionStock()
+        self.pos_stock.position = self.ready_pos()
+        self.pos_stock.set_dict(self.items)
 
-        json = pos_stock.__unicode__()
+    def test_save(self):
+        """
+        Test save dict data into pos stock
+        """
+        self.pos_stock.save()
+        print 'PositionStock saved!\n'
+        print 'pos id: %d' % self.pos_stock.id
+        self.assertTrue(self.pos_stock.id)
 
-        print 'pos id: %d' % pos_stock.id
+    def test_json(self):
+        json = self.pos_stock.__unicode__()
+
         print 'pos in json:'
         print json[:102] + '\n' + json[102:]
-
-        self.assertTrue(pos_stock.id)
 
         self.assertEqual('{', json[0])
         self.assertEqual('}', json[-1])
 
-    def test_pos_options_set_save_json(self):
-        """
-        Test set dict data into pos options
-        """
-        items = [
+
+class TestPositionOption(TestSetUpModel):
+    def setUp(self):
+        TestSetUpModel.setUp(self)
+
+        self.items = [
             {'name': {'ex_month': 'AUG', 'right': '100', 'strike_price': '58.5',
                       'contract': 'PUT', 'ex_year': '14', 'special': 'Normal'},
              'mark_change': -0.63, 'pl_open': -219.0, 'days': 15.0,
@@ -152,38 +182,54 @@ class TestModels(TestCase):
              'mark_change': -0.14, 'pl_open': 57.0, 'days': 15.0,
              'mark': 0.06, 'vega': -6.02, 'pl_day': 42.0, 'delta': -11.92,
              'bp_effect': 0.0, 'theta': 3.11, 'pct_change': 0.0,
-             'quantity': -3.0, 'gamma': -6.74, 'trade_price': 0.25}]
+             'quantity': -3.0, 'gamma': -6.74, 'trade_price': 0.25}
+        ]
 
+    def test_save(self):
+        """
+        Test save dict data into pos options
+        """
         pos = self.ready_pos()
 
-        for item in items:
-            pos_options = models.PositionOption()
-            pos_options.position = pos
-            pos_options.set_dict(item)
-            pos_options.save()
+        for item in self.items:
+            pos_option = models.PositionOption()
+            pos_option.position = pos
+            pos_option.set_dict(item)
+            pos_option.save()
 
-            print 'PosOptions saved!\n'
+            print 'PositionOption saved!'
+            print 'pos id: %d\n' % pos_option.id
 
-            json = pos_options.__unicode__()
+            self.assertTrue(pos_option.id)
 
-            print 'pos id: %d' % pos_options.id
+    def test_json(self):
+        """
+        Test output json data format
+        """
+        pos = self.ready_pos()
+
+        for item in self.items:
+            pos_option = models.PositionOption()
+            pos_option.position = pos
+            pos_option.set_dict(item)
+            json = pos_option.__unicode__()
+
             print 'pos in json:'
-            print json[:102] + '\n' + json[102:204] + '\n' + json[204:]
-
-            self.assertTrue(pos_options.id)
+            print json[:80] + '...'
 
             self.assertEqual('{', json[0])
             self.assertEqual('}', json[-1])
 
             print '\n' + '-' * 100 + '\n'
 
-    def test_overall_set_save_json(self):
-        """
-        Test
-        """
-        date = '2014-08-01'
 
-        items = {
+class TestOverall(TestSetUp):
+    def setUp(self):
+        TestSetUp.setUp(self)
+
+        self.date = '2014-08-01'
+
+        self.items = {
             'available': 1873.49,
             'bp_adjustment': 0.0,
             'futures_bp': 1873.49,
@@ -191,13 +237,33 @@ class TestModels(TestCase):
             'cash_sweep': 3773.49
         }
 
-        overall = models.Overall(**items)
-        overall.date = date
+    def test_save(self):
+        """
+        Test sample data save into db
+        """
+        print 'sample data:'
+        pprint(self.items)
+
+        overall = models.Overall(**self.items)
+        overall.date = self.date
         overall.save()
-        print 'Overall saved!\n'
+        print '\n' + 'Overall saved!\n'
 
-        json = overall.__unicode__()
-
+        self.assertTrue(overall.id)
         print 'overall id: %d' % overall.id
-        print 'overall in json:'
-        print json[:102] + '\n' + json[102:]
+
+        print 'overall data:'
+        print overall.__unicode__()[:80] + '...'
+
+    def test_json(self):
+        """
+        Test json output
+        """
+        overall = models.Overall(**self.items)
+        overall.date = self.date
+        overall.save()
+
+        json = eval(overall.__unicode__())
+
+        print 'json output:'
+        pprint(json)

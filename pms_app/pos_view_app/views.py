@@ -21,13 +21,12 @@ def index(request, date=None):
         else:
             date = datetime.date.today()
 
-
     params = {
         'default_path': reverse('pos_view_app_index'),
         'date': date
     }
 
-    return render(request, 'view/index.html', params)
+    return render(request, 'pos_view_app/index.html', params)
 
 
 def date_exists(request, date):
@@ -56,7 +55,7 @@ def webix_js(request):
     :param request:
     :return: render
     """
-    return render(request, 'view/webix.js',
+    return render(request, 'pos_view_app/webix.js',
                   content_type='application/javascript')
 
 
@@ -66,7 +65,7 @@ def logic_js(request):
     :param request:
     :return: render
     """
-    return render(request, 'view/logic.js',
+    return render(request, 'pos_view_app/logic.js',
                   content_type='application/javascript')
 
 

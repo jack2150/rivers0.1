@@ -81,7 +81,8 @@ var positions = {
         { id:"pct_change", header:"% Change", format:percentColumn, sort:"int" },
         { id:"pl_open", header:"P/L Open", format:floatColumn, sort:"int", footer:{ content:"summColumn" } },
         { id:"pl_day", header:"P/L Day", format:floatColumn, sort:'int', footer:{ content:"summColumn" } },
-        { id:"bp_effect", header:"BP EFT", format:bpEffect, sort:'int', footer:{ content:"summColumn" }}
+        { id:"bp_effect", header:"BP EFT", width: 100, format:bpEffect,
+            sort:'int', footer:{ content:"summColumn" }}
     ],
     css:"my_style",
     footer:true,

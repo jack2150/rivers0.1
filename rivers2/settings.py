@@ -37,10 +37,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
+    'base_app',
     'pms_app',
     'pms_app.pos_import_app',
     'pms_app.pos_view_app',
-    'base_app',
+    'pms_app.spread_view_app',
 )
 
 MIDDLEWARE_CLASSES = (

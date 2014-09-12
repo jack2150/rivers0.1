@@ -1,12 +1,13 @@
 from pms_app.classes.spreads import StartProfit, MaxProfit, StartLoss, MaxLoss, BreakEven
 
 
-class LegOne(object):
+class LegOneContext(object):
     def __init__(self):
         """
         Prepare all classes
         """
         self.name = ''
+        self.context = 'leg_one'
 
         self.start_profit = StartProfit()
         self.max_profit = MaxProfit()
@@ -72,23 +73,43 @@ class LegOne(object):
     def current_status(self, price):
         """
         Return true if price is already profit
+        :return: str
         """
         if self.is_even(price):
-            return 'Even'
+            result = 'even'
         elif self.is_max_profit(price):
-            return 'Max Profit'
+            result = 'max_profit'
         elif self.is_profit(price):
-            return 'Profit'
+            result = 'profit'
         elif self.is_max_loss(price):
-            return 'Max Loss'
+            result = 'max_loss'
         elif self.is_loss(price):
-            return 'Loss'
+            result = 'loss'
         else:
             raise ValueError('Stock conditions are missing!')
 
+        return result
+
+    def json(self):
+        """
+        Return stock data in json format
+        :return: str
+        """
+        json = '{'
+        json += '"context": "%s", ' % self.context
+        json += '"name": "%s", ' % self.name
+        json += '"start_profit": %s, ' % self.start_profit.json()
+        json += '"start_loss": %s, ' % self.start_loss.json()
+        json += '"max_profit": %s, ' % self.max_profit.json()
+        json += '"max_loss": %s, ' % self.max_loss.json()
+        json += '"break_even": %s' % self.break_even.json()
+        json += '}'
+
+        return json
+
     def __unicode__(self):
         """
-        Describe long stock position
+        Describe one leg option position
         :return: str
         """
         output = '%s Position:\n' % self.name
@@ -103,12 +124,12 @@ class LegOne(object):
     __str__ = __repr__ = __unicode__
 
 
-class CallLong(LegOne):
+class CallLong(LegOneContext):
     """
     Long Call positions
     """
     def __init__(self, option):
-        LegOne.__init__(self)
+        LegOneContext.__init__(self)
 
         self.__option = option
         """:type: PositionOption"""
@@ -129,13 +150,13 @@ class CallLong(LegOne):
         self.break_even.condition = '=='
 
         # max profit
-        self.max_profit.profit = float('inf')
+        self.max_profit.amount = float('inf')
         self.max_profit.limit = False
         self.max_profit.price = float('inf')
         self.max_profit.condition = '=='
 
         # max loss
-        self.max_loss.loss = self.calc_max_loss()
+        self.max_loss.amount = self.calc_max_loss()
         self.max_loss.limit = True
         self.max_loss.price = float(self.__option.strike_price)
         self.max_loss.condition = '<='
@@ -156,12 +177,12 @@ class CallLong(LegOne):
                      * self.__option.right)
 
 
-class CallNaked(LegOne):
+class CallNaked(LegOneContext):
     """
     Sell naked call positions
     """
     def __init__(self, option):
-        LegOne.__init__(self)
+        LegOneContext.__init__(self)
 
         self.__option = option
         """:type: PositionOption"""
@@ -182,13 +203,13 @@ class CallNaked(LegOne):
         self.break_even.condition = '=='
 
         # max profit
-        self.max_profit.profit = self.calc_max_profit()
+        self.max_profit.amount = self.calc_max_profit()
         self.max_profit.limit = True
         self.max_profit.price = float(self.__option.strike_price)
         self.max_profit.condition = '<='
 
         # max loss
-        self.max_loss.loss = float('inf')
+        self.max_loss.amount = float('inf')
         self.max_loss.limit = False
         self.max_loss.price = float('inf')
         self.max_loss.condition = '=='
@@ -209,12 +230,12 @@ class CallNaked(LegOne):
                      * self.__option.right)
 
 
-class PutLong(LegOne):
+class PutLong(LegOneContext):
     """
     Long Put Positions
     """
     def __init__(self, option):
-        LegOne.__init__(self)
+        LegOneContext.__init__(self)
 
         self.__option = option
         """:type: PositionOption"""
@@ -235,13 +256,13 @@ class PutLong(LegOne):
         self.break_even.condition = '=='
 
         # max profit
-        self.max_profit.profit = self.calc_max_profit()
+        self.max_profit.amount = self.calc_max_profit()
         self.max_profit.limit = True
         self.max_profit.price = 0.0
         self.max_profit.condition = '=='
 
         # max loss
-        self.max_loss.loss = self.calc_max_loss()
+        self.max_loss.amount = self.calc_max_loss()
         self.max_loss.limit = True
         self.max_loss.price = float(self.__option.strike_price)
         self.max_loss.condition = '>='
@@ -270,12 +291,12 @@ class PutLong(LegOne):
                      * self.__option.right)
 
 
-class PutNaked(LegOne):
+class PutNaked(LegOneContext):
     """
     Sell naked put positions
     """
     def __init__(self, option):
-        LegOne.__init__(self)
+        LegOneContext.__init__(self)
 
         self.__option = option
         """:type: PositionOption"""
@@ -296,13 +317,13 @@ class PutNaked(LegOne):
         self.break_even.condition = '=='
 
         # max profit
-        self.max_profit.profit = self.calc_max_profit()
+        self.max_profit.amount = self.calc_max_profit()
         self.max_profit.limit = True
         self.max_profit.price = float(self.__option.strike_price)
         self.max_profit.condition = '>='
 
         # max loss
-        self.max_loss.loss = self.calc_max_loss()
+        self.max_loss.amount = self.calc_max_loss()
         self.max_loss.limit = True
         self.max_loss.price = 0.0
         self.max_loss.condition = '<='
