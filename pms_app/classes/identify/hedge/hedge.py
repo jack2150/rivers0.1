@@ -1,4 +1,4 @@
-from pms_app.classes.spreads.hedge import hedge
+from pms_app.classes.spreads.hedge import CoveredCall, ProtectiveCall, CoveredPut, ProtectivePut
 
 
 class HedgeIdentify(object):
@@ -67,16 +67,16 @@ class HedgeIdentify(object):
         """
         if self.long_stock() and self.sell_call_option() and self.is_balance():
             # covered call
-            self.cls_name = hedge.CoveredCall
+            self.cls_name = CoveredCall
         elif self.long_stock() and self.buy_put_option() and self.is_balance():
             # protective put
-            self.cls_name = hedge.ProtectivePut
+            self.cls_name = ProtectivePut
         elif self.short_stock() and self.buy_call_option() and self.is_balance():
             # protective call
-            self.cls_name = hedge.ProtectiveCall
+            self.cls_name = ProtectiveCall
         elif self.short_stock() and self.sell_put_option() and self.is_balance():
             # covered put
-            self.cls_name = hedge.CoveredPut
+            self.cls_name = CoveredPut
         else:
             self.cls_name = None
 

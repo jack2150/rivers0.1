@@ -3,7 +3,7 @@ from pms_app.classes.identify.tests import TestReadyUp
 from pms_app import models
 
 from pms_app.classes.identify.leg_one import LegOneIdentify
-from pms_app.classes.spreads.leg_one import leg_one
+from pms_app.classes.spreads.leg_one import leg_one2
 
 
 class TestLegOneIdentify(TestReadyUp):
@@ -113,8 +113,8 @@ class TestLegOneIdentify(TestReadyUp):
 
             self.assertIn(
                 cls,
-                [leg_one.CallLong, leg_one.CallNaked,
-                 leg_one.PutLong, leg_one.PutNaked,
+                [leg_one2.CallLong, leg_one2.CallNaked,
+                 leg_one2.PutLong, leg_one2.PutNaked,
                  None]
             )
 

@@ -1,4 +1,4 @@
-from pms_app.classes.spreads.leg_one import leg_one
+from pms_app.classes.spreads.leg_one import leg_one2
 
 
 class LegOneIdentify(object):
@@ -42,13 +42,13 @@ class LegOneIdentify(object):
         :return: type
         """
         if self.long_call():
-            self.cls_name = leg_one.CallLong
+            self.cls_name = leg_one2.CallLong
         elif self.short_call():
-            self.cls_name = leg_one.CallNaked
+            self.cls_name = leg_one2.CallNaked
         elif self.long_put():
-            self.cls_name = leg_one.PutLong
+            self.cls_name = leg_one2.PutLong
         elif self.short_put():
-            self.cls_name = leg_one.PutNaked
+            self.cls_name = leg_one2.PutNaked
         else:
             self.cls_name = None
 

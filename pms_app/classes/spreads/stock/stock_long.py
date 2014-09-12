@@ -1,4 +1,4 @@
-from pms_app.classes.spreads.stock.stock_context import StockContext
+from pms_app.classes.spreads.stock.context import StockContext
 
 
 class StockLong(StockContext):
