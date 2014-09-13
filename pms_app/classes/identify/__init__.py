@@ -1,1 +1,1 @@
-from identify import Identify
+from pms_app.classes.identify.identify import Identify

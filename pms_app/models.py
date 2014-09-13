@@ -223,3 +223,28 @@ class Overall(models.Model):
         output += '}'
 
         return output
+
+
+class PositionSet(object):
+    """
+    a record for a position contain all its instrument, stock and options
+    """
+    def __init__(self, position):
+        """
+        :param position: Position
+        """
+        self.position = position
+
+        self.instrument = PositionInstrument.objects.get(position=self.position)
+
+        self.stock = PositionStock.objects.get(position=self.position)
+
+        self.options = PositionOption.objects.filter(position=self.position).exclude(quantity=0)
+
+    def get_option(self):
+        """
+        Return first option in options
+        """
+        return self.options.first()
+
+    option = property(fget=get_option)

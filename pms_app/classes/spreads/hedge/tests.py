@@ -1,17 +1,18 @@
 # perfect...
-from pms_app.classes.identify.tests import TestReadyUp
+from pms_app.models import Position, PositionSet
+from pms_app.tests import TestReadyUp
 from pms_app.classes.spreads import hedge
-from pms_app import models
 
 
 class TestHedgeContext(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-        
         self.ready_all(key=2)
-        position = models.Position.objects.first()
-        
-        self.hedge_context = hedge.HedgeContext(position)
+
+        position = Position.objects.first()
+        self.pos_set = PositionSet(position)
+
+        self.hedge_context = hedge.HedgeContext(self.pos_set)
 
         self.set_prices = [12.5, 20.7, 33.94, 8.71, 114.81]
         self.set_conditions = ['>', '<', '==', '<=', '>=']
@@ -43,16 +44,16 @@ class TestHedgeContext(TestReadyUp):
         Test all property inside class
         """
         # check models data exist
-        print 'position id: %d' % self.hedge_context._instrument.id
-        print 'instrument id: %d' % self.hedge_context._position.id
-        print 'stock id: %d' % self.hedge_context._stock.id
-        print 'option id: %d\n' % self.hedge_context._options[0].id
+        print 'position id: %d' % self.hedge_context.pos_set.instrument.id
+        print 'instrument id: %d' % self.hedge_context.pos_set.position.id
+        print 'stock id: %d' % self.hedge_context.pos_set.stock.id
+        print 'option id: %d\n' % self.hedge_context.pos_set.option.id
 
-        self.assertTrue(self.hedge_context._position.id)
-        self.assertTrue(self.hedge_context._stock.id)
-        self.assertTrue(self.hedge_context._instrument.id)
-        self.assertEqual(len(self.hedge_context._options), 1)
-        self.assertTrue(self.hedge_context._options[0].id)
+        self.assertTrue(self.hedge_context.pos_set.position.id)
+        self.assertTrue(self.hedge_context.pos_set.stock.id)
+        self.assertTrue(self.hedge_context.pos_set.instrument.id)
+        self.assertEqual(self.hedge_context.pos_set.options.count(), 1)
+        self.assertTrue(self.hedge_context.pos_set.option.id)
         
         # check pls is removed
         self.assertRaises(lambda: self.hedge_context.pls)
@@ -171,16 +172,17 @@ class TestHedgeContext(TestReadyUp):
 class TestCoveredCall(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=2)
-        position = models.Position.objects.get(symbol='AAPL')
 
-        self.covered_call = hedge.CoveredCall(position)
+        position = Position.objects.get(symbol='AAPL')
+        self.pos_set = PositionSet(position)
 
-        self.stock_price = float(self.covered_call._stock.trade_price)
-        self.stock_quantity = float(self.covered_call._stock.quantity)
-        self.option_price = float(self.covered_call._options[0].trade_price)
-        self.option_strike = float(self.covered_call._options[0].strike_price)
+        self.covered_call = hedge.CoveredCall(self.pos_set)
+
+        self.stock_price = float(self.covered_call.pos_set.stock.trade_price)
+        self.stock_quantity = float(self.covered_call.pos_set.stock.quantity)
+        self.option_price = float(self.covered_call.pos_set.option.trade_price)
+        self.option_strike = float(self.covered_call.pos_set.option.strike_price)
 
     def test_property(self):
         """
@@ -331,16 +333,17 @@ class TestCoveredCall(TestReadyUp):
 class TestProtectivePut(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=2)
-        position = models.Position.objects.get(symbol='DDD')
 
-        self.protective_put = hedge.ProtectivePut(position)
+        position = Position.objects.get(symbol='DDD')
+        self.pos_set = PositionSet(position)
 
-        self.stock_price = float(self.protective_put._stock.trade_price)
-        self.stock_quantity = float(self.protective_put._stock.quantity)
-        self.option_price = float(self.protective_put._options[0].trade_price)
-        self.option_strike = float(self.protective_put._options[0].strike_price)
+        self.protective_put = hedge.ProtectivePut(self.pos_set)
+
+        self.stock_price = float(self.protective_put.pos_set.stock.trade_price)
+        self.stock_quantity = float(self.protective_put.pos_set.stock.quantity)
+        self.option_price = float(self.protective_put.pos_set.option.trade_price)
+        self.option_strike = float(self.protective_put.pos_set.option.strike_price)
 
     def test_property(self):
         """
@@ -472,16 +475,17 @@ class TestProtectivePut(TestReadyUp):
 class TestCoveredPut(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=2)
-        position = models.Position.objects.get(symbol='C')
 
-        self.covered_put = hedge.CoveredPut(position)
+        position = Position.objects.get(symbol='C')
+        self.pos_set = PositionSet(position)
 
-        self.stock_price = float(self.covered_put._stock.trade_price)
-        self.stock_quantity = float(self.covered_put._stock.quantity)
-        self.option_price = float(self.covered_put._options[0].trade_price)
-        self.option_strike = float(self.covered_put._options[0].strike_price)
+        self.covered_put = hedge.CoveredPut(self.pos_set)
+
+        self.stock_price = float(self.covered_put.pos_set.stock.trade_price)
+        self.stock_quantity = float(self.covered_put.pos_set.stock.quantity)
+        self.option_price = float(self.covered_put.pos_set.option.trade_price)
+        self.option_strike = float(self.covered_put.pos_set.option.strike_price)
 
     def test_property(self):
         """
@@ -615,14 +619,15 @@ class TestProtectiveCall(TestReadyUp):
         TestReadyUp.setUp(self)
 
         self.ready_all(key=2)
-        position = models.Position.objects.get(symbol='BAC')
+        position = Position.objects.get(symbol='BAC')
+        self.pos_set = PositionSet(position)
 
-        self.protective_call = hedge.ProtectiveCall(position)
+        self.protective_call = hedge.ProtectiveCall(self.pos_set)
 
-        self.stock_price = float(self.protective_call._stock.trade_price)
-        self.stock_quantity = float(self.protective_call._stock.quantity)
-        self.option_price = float(self.protective_call._options[0].trade_price)
-        self.option_strike = float(self.protective_call._options[0].strike_price)
+        self.stock_price = float(self.protective_call.pos_set.stock.trade_price)
+        self.stock_quantity = float(self.protective_call.pos_set.stock.quantity)
+        self.option_price = float(self.protective_call.pos_set.option.trade_price)
+        self.option_strike = float(self.protective_call.pos_set.option.strike_price)
 
     def test_property(self):
         """

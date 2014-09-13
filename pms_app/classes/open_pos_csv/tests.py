@@ -689,7 +689,7 @@ class TestOpenPosCSV(TestCase):
         Test ready stock only files
         """
         test_date = '2014-03-10'
-        test_path = FILES['tos_positions'] + 'tests/' + '2014-03-10-stock_only.csv'
+        test_path = FILES['tos_positions'] + 'tests/' + '2014-03-10-stock.csv'
 
         print 'file date: %s' % test_date
         print 'file path: %s\n' % test_path
@@ -719,17 +719,17 @@ class TestOpenPosCSV(TestCase):
         Test read on all files inside tos.pos
         """
         files = [
-            FILES['tos_positions'] + '2014-08-01-PositionStatement.csv',
-            FILES['tos_positions'] + '2014-08-02-PositionStatement.csv',
-            FILES['tos_positions'] + 'tests/2014-03-10-stock_only.csv',
-            FILES['tos_positions'] + 'tests/2014-03-11-stock_options_combine.csv',
-            FILES['tos_positions'] + 'tests/2014-03-12-one-leg-option.csv',
-            FILES['tos_positions'] + 'tests/2014-03-13-two-legs-options.csv',
-            FILES['tos_positions'] + 'tests/2014-03-17-four-legs-options-0-8th.csv'
+            '2014-03-07-closed.csv',
+            '2014-03-10-stock.csv',
+            '2014-03-11-hedge.csv',
+            '2014-03-12-one-leg.csv',
+            '2014-03-13-two-legs.csv',
+            '2014-03-14-three-legs.csv',
+            '2014-03-17-four-legs-part-1.csv'
         ]
 
         for f in files:
-            open_csv = OpenPosCSV(fname=f)
+            open_csv = OpenPosCSV(fname=FILES['tos_positions'] + 'tests/' + f)
 
             pos, ov = open_csv.read()
 

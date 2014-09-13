@@ -1,14 +1,21 @@
 # perfect...
 from pms_app.tests import TestSetUp
+from pms_app.classes.identify.tests import TestReadyUp
 from pms_app.classes.spreads import spread
+from pms_app.models import Position, PositionSet
 
 
-class TestSpreads(TestSetUp):
+class TestSpreads(TestReadyUp):
     def setUp(self):
-        TestSetUp.setUp(self)
+        TestReadyUp.setUp(self)
+
+        self.ready_all(key=1)
+
+        position = Position.objects.all().first()
+        pos_set = PositionSet(position)
 
         # first create spread
-        self.sp = spread.Spread()
+        self.sp = spread.Spread(pos_set)
 
     def test_not_implemented(self):
         """
@@ -38,7 +45,6 @@ class TestSpreads(TestSetUp):
         """
         self.assertEqual(self.sp.name, 'closed')
         self.assertEqual(self.sp.context, 'closed')
-        self.assertEqual(self.sp.price, 0.0)
 
 
 class TestStartProfit(TestSetUp):

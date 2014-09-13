@@ -1,7 +1,7 @@
 # perfect...
-from pms_app.classes.identify.tests import TestReadyUp
+from pms_app.models import Position, PositionSet
+from pms_app.tests import TestReadyUp
 from pms_app.classes.spreads import stock
-from pms_app import models
 
 
 class TestStockContext(TestReadyUp):
@@ -9,13 +9,14 @@ class TestStockContext(TestReadyUp):
         TestReadyUp.setUp(self)
 
         self.ready_all(key=1)
-        position = models.Position.objects.first()
+        position = Position.objects.first()
+        pos_set = PositionSet(position)
 
-        self.stock_context = stock.StockContext(position)
+        self.stock_context = stock.StockContext(pos_set)
 
         self.set_prices = [12.5, 20.7, 33.94, 8.71, 114.81]
         self.set_conditions = ['>', '<', '==', '<=', '>=']
-        self.test_prices = [1.9, 22.67, 33.94, 7.66, 100.88]
+        self.test_prices = [13.9, 22.67, 33.94, 7.66, 100.88]
 
     def test_json(self):
         """
@@ -43,16 +44,15 @@ class TestStockContext(TestReadyUp):
         Test all property inside class
         """
         # check models data exist
-        print 'position id: %d' % self.stock_context._instrument.id
-        print 'instrument id: %d' % self.stock_context._position.id
-        print 'stock id: %d' % self.stock_context._stock.id
+        print 'position id: %d' % self.stock_context.pos_set.instrument.id
+        print 'instrument id: %d' % self.stock_context.pos_set.position.id
+        print 'stock id: %d' % self.stock_context.pos_set.stock.id
 
         # check models data exist
-        self.assertTrue(self.stock_context._position.id)
-        self.assertTrue(self.stock_context._stock.id)
-        self.assertTrue(self.stock_context._instrument.id)
-        self.assertEqual(len(self.stock_context._options), 1)
-        self.assertFalse(self.stock_context._options[0].id)
+        self.assertTrue(self.stock_context.pos_set.stock.id)
+        self.assertTrue(self.stock_context.pos_set.stock.id)
+        self.assertTrue(self.stock_context.pos_set.instrument.id)
+        self.assertFalse(self.stock_context.pos_set.options.count())
 
     def test_is_profit(self):
         """
@@ -134,11 +134,12 @@ class TestStockLong(TestReadyUp):
         TestReadyUp.setUp(self)
         self.ready_all(key=1)
 
-        self.stock = models.PositionStock.objects.filter(quantity__gte=0).first()
+        position = Position.objects.first()
+        self.pos_set = PositionSet(position)
 
-        print 'Symbol: %s\n' % self.stock.position.symbol
+        print 'Symbol: %s\n' % self.pos_set.stock.position.symbol
 
-        self.stock_long = stock.StockLong(self.stock.position)
+        self.stock_long = stock.StockLong(self.pos_set)
 
     def test_property(self):
         """
@@ -213,7 +214,7 @@ class TestStockLong(TestReadyUp):
         )
 
         self.assertEqual(self.stock_long.pl.max_loss.amount,
-                         float(self.stock.trade_price * abs(self.stock.quantity)))
+                         float(self.pos_set.stock.trade_price * abs(self.pos_set.stock.quantity)))
         self.assertEqual(self.stock_long.pl.max_loss.limit, True)
         self.assertLess(self.stock_long.pl.max_loss.price, self.stock_long.pl.break_even.price)
         self.assertEqual(self.stock_long.pl.max_loss.condition, '==')
@@ -229,21 +230,21 @@ class TestStockLong(TestReadyUp):
         )
 
         self.assertEqual(self.stock_long.pl.break_even.price,
-                         float(self.stock.trade_price))
+                         float(self.pos_set.stock.trade_price))
         self.assertEqual(self.stock_long.pl.break_even.condition, '==')
 
 
 class TestStockShort(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=1)
 
-        self.stock = models.PositionStock.objects.filter(quantity__lte=0).first()
+        position = Position.objects.first()
+        self.pos_set = PositionSet(position)
 
-        print 'Symbol: %s\n' % self.stock.position.symbol
+        print 'Symbol: %s\n' % self.pos_set.stock.position.symbol
 
-        self.stock_short = stock.StockShort(self.stock.position)
+        self.stock_short = stock.StockShort(self.pos_set)
 
     def test_property(self):
         """
@@ -286,7 +287,7 @@ class TestStockShort(TestReadyUp):
         )
 
         self.assertEqual(self.stock_short.pl.max_profit.amount,
-                         float(self.stock.trade_price * abs(self.stock.quantity)))
+                         float(self.pos_set.stock.trade_price * abs(self.pos_set.stock.quantity)))
         self.assertEqual(self.stock_short.pl.max_profit.limit, True)
         self.assertLess(self.stock_short.pl.max_profit.price, self.stock_short.pl.break_even.price)
         self.assertEqual(self.stock_short.pl.max_profit.condition, '==')
@@ -334,5 +335,5 @@ class TestStockShort(TestReadyUp):
         )
 
         self.assertEqual(self.stock_short.pl.break_even.price,
-                         float(self.stock.trade_price))
+                         float(self.pos_set.stock.trade_price))
         self.assertEqual(self.stock_short.pl.break_even.condition, '==')

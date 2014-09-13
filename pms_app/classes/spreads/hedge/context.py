@@ -3,19 +3,9 @@ from pms_app.classes import spreads
 
 
 class HedgeContext(spreads.Spread):
-    def __init__(self, position):
+    def __init__(self, pos_set):
         # parent init
-        spreads.Spread.__init__(self)
-
-        # set position and get instrument
-        self._position = position
-        self._instrument = models.PositionInstrument.objects.get(position=position)
-
-        # set stock only
-        self._stock = models.PositionStock.objects.get(position=position)
-
-        # set one option only, because only one use get
-        self._options = [models.PositionOption.objects.get(position=position)]
+        spreads.Spread.__init__(self, pos_set)
 
         # set context
         self.context = 'hedge'

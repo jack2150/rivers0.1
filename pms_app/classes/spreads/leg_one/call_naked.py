@@ -5,8 +5,8 @@ class CallNaked(LegOneContext):
     """
     Naked Call positions
     """
-    def __init__(self, position):
-        LegOneContext.__init__(self, position)
+    def __init__(self, pos_set):
+        LegOneContext.__init__(self, pos_set)
 
         # set name
         self.name = 'naked_call'
@@ -26,7 +26,7 @@ class CallNaked(LegOneContext):
         # max profit
         self.pl.max_profit.amount = self.calc_max_profit()
         self.pl.max_profit.limit = True
-        self.pl.max_profit.price = float(self.option.strike_price)
+        self.pl.max_profit.price = float(self.pos_set.option.strike_price)
         self.pl.max_profit.condition = '<='
 
         # max loss
@@ -40,12 +40,12 @@ class CallNaked(LegOneContext):
         Calculate then return the break even value
         :return: float
         """
-        return float(self.option.strike_price + self.option.trade_price)
+        return float(self.pos_set.option.strike_price + self.pos_set.option.trade_price)
 
     def calc_max_profit(self):
         """
         Calculate then return the break even value
         :return: float
         """
-        return float(self.option.trade_price * abs(self.option.quantity)
-                     * self.option.right)
+        return float(self.pos_set.option.trade_price * abs(self.pos_set.option.quantity)
+                     * self.pos_set.option.right)

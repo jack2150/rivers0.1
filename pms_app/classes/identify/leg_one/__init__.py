@@ -1,1 +1,1 @@
-from leg_one import LegOneIdentify
+from pms_app.classes.identify.leg_one.leg_one import LegOneIdentify

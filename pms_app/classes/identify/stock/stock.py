@@ -8,14 +8,28 @@ class StockIdentify(object):
 
         self.cls_name = None
 
+    def long_stock(self):
+        """
+        Return true if it is long stock and false if not
+        :return: bool
+        """
+        return self.stock.quantity > 0
+
+    def short_stock(self):
+        """
+        Return true if it is short stock and false if not
+        :return: bool
+        """
+        return self.stock.quantity < 0
+
     def get_cls(self):
         """
         Return the class name use for analysis PL and etc
         :return: str
         """
-        if self.stock.quantity > 0:
+        if self.long_stock():
             self.cls_name = StockLong
-        elif self.stock.quantity < 0:
+        elif self.short_stock():
             self.cls_name = StockShort
         else:
             raise Exception('Invalid stock identify. Stock have zero quantity.')

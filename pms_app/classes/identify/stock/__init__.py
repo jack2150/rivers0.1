@@ -1,1 +1,1 @@
-from stock import StockIdentify
+from pms_app.classes.identify.stock.stock import StockIdentify

@@ -1,16 +1,17 @@
-from pms_app.classes.identify.tests import TestReadyUp
+from pms_app.models import Position, PositionSet
+from pms_app.tests import TestReadyUp
 from pms_app.classes.spreads import leg_one
-from pms_app import models
 
 
 class TestLegOneContext(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=3)
-        position = models.Position.objects.first()
 
-        self.leg_one_context = leg_one.LegOneContext(position)
+        position = Position.objects.first()
+        self.pos_set = PositionSet(position)
+
+        self.leg_one_context = leg_one.LegOneContext(self.pos_set)
 
     def test_json(self):
         """
@@ -38,16 +39,16 @@ class TestLegOneContext(TestReadyUp):
         Test all property inside class
         """
         # check models data exist
-        print 'position id: %d' % self.leg_one_context._instrument.id
-        print 'instrument id: %d' % self.leg_one_context._position.id
-        print 'stock id: %d' % self.leg_one_context._stock.id
-        print 'option id: %d\n' % self.leg_one_context.option.id
+        print 'position id: %d' % self.leg_one_context.pos_set.instrument.id
+        print 'instrument id: %d' % self.leg_one_context.pos_set.position.id
+        print 'stock id: %d' % self.leg_one_context.pos_set.stock.id
+        print 'option id: %d\n' % self.leg_one_context.pos_set.option.id
 
-        self.assertTrue(self.leg_one_context._position.id)
-        self.assertTrue(self.leg_one_context._stock.id)
-        self.assertTrue(self.leg_one_context._instrument.id)
-        self.assertEqual(len(self.leg_one_context._options), 1)
-        self.assertTrue(self.leg_one_context.option.id)
+        self.assertTrue(self.leg_one_context.pos_set.position.id)
+        self.assertTrue(self.leg_one_context.pos_set.stock.id)
+        self.assertTrue(self.leg_one_context.pos_set.instrument.id)
+        self.assertEqual(self.leg_one_context.pos_set.options.count(), 1)
+        self.assertTrue(self.leg_one_context.pos_set.option.id)
 
         # check pls is removed
         self.assertRaises(lambda: self.leg_one_context.pls)
@@ -56,16 +57,17 @@ class TestLegOneContext(TestReadyUp):
 class TestCallLong(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=3)
-        position = models.Position.objects.get(symbol='AAPL')
 
-        self.call_long = leg_one.CallLong(position)
+        position = Position.objects.get(symbol='AAPL')
+        self.pos_set = PositionSet(position)
 
-        self.option_price = float(self.call_long.option.trade_price)
-        self.option_strike = float(self.call_long.option.strike_price)
-        self.option_quantity = float(self.call_long.option.quantity)
-        self.option_right = int(self.call_long.option.right)
+        self.call_long = leg_one.CallLong(self.pos_set)
+
+        self.option_price = float(self.call_long.pos_set.option.trade_price)
+        self.option_strike = float(self.call_long.pos_set.option.strike_price)
+        self.option_quantity = float(self.call_long.pos_set.option.quantity)
+        self.option_right = int(self.call_long.pos_set.option.right)
 
     def test_property(self):
         """
@@ -196,16 +198,17 @@ class TestCallLong(TestReadyUp):
 class TestCallNaked(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=3)
-        position = models.Position.objects.get(symbol='FB')
 
-        self.call_naked = leg_one.CallNaked(position)
+        position = Position.objects.get(symbol='FB')
+        self.pos_set = PositionSet(position)
 
-        self.option_price = float(self.call_naked.option.trade_price)
-        self.option_strike = float(self.call_naked.option.strike_price)
-        self.option_quantity = float(self.call_naked.option.quantity)
-        self.option_right = int(self.call_naked.option.right)
+        self.call_naked = leg_one.CallNaked(self.pos_set)
+
+        self.option_price = float(self.call_naked.pos_set.option.trade_price)
+        self.option_strike = float(self.call_naked.pos_set.option.strike_price)
+        self.option_quantity = float(self.call_naked.pos_set.option.quantity)
+        self.option_right = int(self.call_naked.pos_set.option.right)
 
     def test_property(self):
         """
@@ -336,16 +339,17 @@ class TestCallNaked(TestReadyUp):
 class TestPutLong(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=3)
-        position = models.Position.objects.get(symbol='IBM')
 
-        self.put_long = leg_one.PutLong(position)
+        position = Position.objects.get(symbol='IBM')
+        self.pos_set = PositionSet(position)
 
-        self.option_price = float(self.put_long.option.trade_price)
-        self.option_strike = float(self.put_long.option.strike_price)
-        self.option_quantity = float(self.put_long.option.quantity)
-        self.option_right = int(self.put_long.option.right)
+        self.put_long = leg_one.PutLong(self.pos_set)
+
+        self.option_price = float(self.put_long.pos_set.option.trade_price)
+        self.option_strike = float(self.put_long.pos_set.option.strike_price)
+        self.option_quantity = float(self.put_long.pos_set.option.quantity)
+        self.option_right = int(self.put_long.pos_set.option.right)
 
     def test_property(self):
         """
@@ -496,16 +500,17 @@ class TestPutLong(TestReadyUp):
 class TestPutNaked(TestReadyUp):
     def setUp(self):
         TestReadyUp.setUp(self)
-
         self.ready_all(key=3)
-        position = models.Position.objects.get(symbol='FSLR')
 
-        self.put_naked = leg_one.PutNaked(position)
+        position = Position.objects.get(symbol='FSLR')
+        self.pos_set = PositionSet(position)
 
-        self.option_price = float(self.put_naked.option.trade_price)
-        self.option_strike = float(self.put_naked.option.strike_price)
-        self.option_quantity = float(self.put_naked.option.quantity)
-        self.option_right = int(self.put_naked.option.right)
+        self.put_naked = leg_one.PutNaked(self.pos_set)
+
+        self.option_price = float(self.put_naked.pos_set.option.trade_price)
+        self.option_strike = float(self.put_naked.pos_set.option.strike_price)
+        self.option_quantity = float(self.put_naked.pos_set.option.quantity)
+        self.option_right = int(self.put_naked.pos_set.option.right)
 
     def test_property(self):
         """

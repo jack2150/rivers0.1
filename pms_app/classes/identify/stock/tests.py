@@ -1,37 +1,69 @@
-from pms_app.classes.identify.tests import TestReadyUp
-from pms_app import models
-
+from pms_app.models import PositionStock, PositionSet
+from pms_app.tests import TestReadyUp
 from pms_app.classes.identify.stock import StockIdentify
 from pms_app.classes.spreads.stock import StockLong, StockShort
 
 
 class TestStockIdentify(TestReadyUp):
-    def test_get_cls(self):
+    def stock_conditions(self, attr, expected):
         """
-        Test get name using stock identify class
+        For test condition methods
         """
-        self.ready_all(key=1)
+        stock = PositionStock()
 
-        for key, position in enumerate(models.Position.objects.all()):
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+        for qty, expect in zip([1, -1], expected):
+            stock.quantity = qty
 
             stock_identify = StockIdentify(stock)
+            result = getattr(stock_identify, attr)()
 
-            cls = stock_identify.get_cls()
+            self.assertEqual(result, expect)
 
-            if stock.quantity > 0:
-                self.assertEqual(cls, StockLong)
-            else:
-                self.assertEqual(cls, StockShort)
+            print 'quantity: %d' % qty
+            print 'result: %s\n' % result
 
-            print 'stock quantity: %d' % stock.quantity
-            print 'class module: %s\n' % cls
+    def test_long_stock(self):
+        """
+        Test is long stock condition
+        """
+        self.stock_conditions('long_stock', [True, False])
 
-            print cls(stock)
+    def test_short_stock(self):
+        """
+        Test is short stock condition
+        """
+        self.stock_conditions('short_stock', [False, True])
 
-            for price in [60, 73.58, 94.93, 100]:
-                print 'price: %.2f -> current status: %s' \
-                      % (price, cls(stock).current_status(price))
+    def test_get_cls_long_stock(self):
+        """
+        Test get class return long stock position
+        """
+        self.ready_all(key=1)
+        stock = PositionStock.objects.exclude(quantity__lte=0).first()
 
-            print '\n' + '-' * 100 + '\n'
+        stock_identify = StockIdentify(stock)
+        cls = stock_identify.get_cls()
+        self.assertEqual(cls, StockLong)
+
+        print 'stock quantity: %d' % stock.quantity
+        print 'class module: %s\n' % cls
+
+        spread = cls(PositionSet(stock.position))
+        print spread
+
+    def test_get_cls_short_stock(self):
+        """
+        Test get class return long stock position
+        """
+        self.ready_all(key=1)
+        stock = PositionStock.objects.exclude(quantity__gte=0).first()
+
+        stock_identify = StockIdentify(stock)
+        cls = stock_identify.get_cls()
+        self.assertEqual(cls, StockShort)
+
+        print 'stock quantity: %d' % stock.quantity
+        print 'class module: %s\n' % cls
+
+        spread = cls(PositionSet(stock.position))
+        print spread

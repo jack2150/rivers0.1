@@ -1,99 +1,57 @@
-import random
-from pms_app.classes.identify.tests import TestReadyUp
-from pms_app import models
-
+from pms_app.models import PositionOption, PositionSet
+from pms_app.tests import TestReadyUp
 from pms_app.classes.identify.leg_one import LegOneIdentify
-from pms_app.classes.spreads.leg_one import leg_one2
+from pms_app.classes.spreads.leg_one import CallLong, CallNaked, PutLong, PutNaked
 
 
 class TestLegOneIdentify(TestReadyUp):
-    def test_long_call(self):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+
+        self.option = PositionOption()
+
+    def option_conditions(self, attr, expect_results):
         """
-        Test option is a long call position
+        Test is buy call condition
         """
-        for quantity in [-1, 0, 1]:
-            for contract in ['CALL', 'PUT']:
-                option = models.PositionOption(
-                    quantity=quantity, contract=contract
-                )
+        options = [(c, q) for c in ['CALL', 'PUT'] for q in [1, -1]]
+        print options
 
-                leg_one_identify = LegOneIdentify(option)
+        for (contract, quantity), expect in zip(options, expect_results):
+            self.option.contract = contract
+            self.option.quantity = quantity
 
-                result = leg_one_identify.long_call()
+            leg_one_identify = LegOneIdentify(self.option)
+            result = getattr(leg_one_identify, attr)()
 
-                print 'quantity: %d, contract: %s' % (quantity, contract)
-                print 'long call result: %s\n' % result
+            self.assertEqual(result, expect)
 
-                if contract == 'CALL' and quantity > 0:
-                    self.assertTrue(result)
-                else:
-                    self.assertFalse(result)
+            print 'quantity: %d, contract: %s' % (quantity, contract)
+            print 'result: %s\n' % result
 
-    def test_short_call(self):
+    def test_long_call_option(self):
         """
-        Test option is a short (naked) call position
+        Test is long call condition
         """
-        for quantity in [-1, 0, 1]:
-            for contract in ['CALL', 'PUT']:
-                option = models.PositionOption(
-                    quantity=quantity, contract=contract
-                )
+        self.option_conditions('long_call_option', [True, False, False, False])
 
-                leg_one_identify = LegOneIdentify(option)
-
-                result = leg_one_identify.short_call()
-
-                print 'quantity: %d, contract: %s' % (quantity, contract)
-                print 'long call result: %s\n' % result
-
-                if contract == 'CALL' and quantity < 0:
-                    self.assertTrue(result)
-                else:
-                    self.assertFalse(result)
-
-    def test_long_put(self):
+    def test_short_call_option(self):
         """
-        Test option is a long put position
+        Test is short call condition
         """
-        for quantity in [-1, 0, 1]:
-            for contract in ['CALL', 'PUT']:
-                option = models.PositionOption(
-                    quantity=quantity, contract=contract
-                )
+        self.option_conditions('short_call_option', [False, True, False, False])
 
-                leg_one_identify = LegOneIdentify(option)
-
-                result = leg_one_identify.long_put()
-
-                print 'quantity: %d, contract: %s' % (quantity, contract)
-                print 'long call result: %s\n' % result
-
-                if contract == 'PUT' and quantity > 0:
-                    self.assertTrue(result)
-                else:
-                    self.assertFalse(result)
-
-    def test_short_put(self):
+    def test_long_put_option(self):
         """
-        Test option is a short (naked) put position
+        Test is long put condition
         """
-        for quantity in [-1, 0, 1]:
-            for contract in ['CALL', 'PUT']:
-                option = models.PositionOption(
-                    quantity=quantity, contract=contract
-                )
+        self.option_conditions('long_put_option', [False, False, True, False])
 
-                leg_one_identify = LegOneIdentify(option)
-
-                result = leg_one_identify.short_put()
-
-                print 'quantity: %d, contract: %s' % (quantity, contract)
-                print 'long call result: %s\n' % result
-
-                if contract == 'PUT' and quantity < 0:
-                    self.assertTrue(result)
-                else:
-                    self.assertFalse(result)
+    def test_short_put_option(self):
+        """
+        Test is short put condition
+        """
+        self.option_conditions('short_put_option', [False, False, False, True])
 
     def test_get_cls(self):
         """
@@ -101,10 +59,7 @@ class TestLegOneIdentify(TestReadyUp):
         """
         self.ready_all(key=3)
 
-        for position in models.Position.objects.all():
-            option = models.PositionOption.objects.filter(position=position).first()
-            """:type: PositionOption"""
-
+        for option in PositionOption.objects.exclude(quantity=0).all():
             leg_one_identify = LegOneIdentify(option)
 
             cls = leg_one_identify.get_cls()
@@ -113,21 +68,9 @@ class TestLegOneIdentify(TestReadyUp):
 
             self.assertIn(
                 cls,
-                [leg_one2.CallLong, leg_one2.CallNaked,
-                 leg_one2.PutLong, leg_one2.PutNaked,
+                [CallLong, CallNaked,
+                 PutLong, PutNaked,
                  None]
             )
 
-            if cls:
-                print 'current class: %s' % cls.__name__
-
-                inst = cls(option)
-
-                print inst
-
-                for x in random.sample(xrange(-10, 10), 5):
-                    price = inst.break_even.price + x
-                    print 'price: %s, current status: %s' \
-                          % (price, inst.current_status(price))
-
-                print ''
+            print cls(PositionSet(option.position))

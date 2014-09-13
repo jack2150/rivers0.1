@@ -1,1 +1,1 @@
-from hedge import HedgeIdentify
+from pms_app.classes.identify.hedge.hedge import HedgeIdentify

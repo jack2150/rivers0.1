@@ -1,22 +1,10 @@
-from pms_app import models
-
-
 class Spread(object):
-    def __init__(self):
+    def __init__(self, pos_set):
         """
         Prepare all classes
         """
-        self._position = models.Position()
-        """:type: Position"""
-
-        self._instrument = models.PositionInstrument()
-        """:type: PositionInstrument"""
-
-        self._stock = models.PositionStock()
-        """:type: PositionStock"""
-
-        self._options = [models.PositionOption()]
-        """:type: list of PositionOption"""
+        self.pos_set = pos_set
+        """ :type: PositionSet """
 
         # name for this spread
         self.name = 'closed'
@@ -39,7 +27,7 @@ class Spread(object):
         Return current price for stock symbol
         :return : float
         """
-        return self._stock.mark
+        return self.pos_set.stock.mark
 
     price = property(fget=get_price)
 

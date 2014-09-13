@@ -4,10 +4,7 @@ from pms_app.classes.spreads.hedge import CoveredCall, ProtectiveCall, CoveredPu
 class HedgeIdentify(object):
     def __init__(self, stock, option):
         self.stock = stock
-        """:type: PositionStock"""
-
         self.option = option
-        """:type: PositionOption"""
 
         self.cls_name = None
 
@@ -25,28 +22,28 @@ class HedgeIdentify(object):
         """
         return self.stock.quantity < 0
 
-    def buy_call_option(self):
+    def long_call_option(self):
         """
         Return true if buy call option
         :return: bool
         """
         return self.option.contract == 'CALL' and self.option.quantity > 0
 
-    def sell_call_option(self):
+    def short_call_option(self):
         """
         Return true if sell call option
         :return: bool
         """
         return self.option.contract == 'CALL' and self.option.quantity < 0
 
-    def buy_put_option(self):
+    def long_put_option(self):
         """
         Return true if buy put option
         :return: bool
         """
         return self.option.contract == 'PUT' and self.option.quantity > 0
 
-    def sell_put_option(self):
+    def short_put_option(self):
         """
         Return true if sell put option
         :return: bool
@@ -65,16 +62,16 @@ class HedgeIdentify(object):
         Return the class name use for analysis PL and etc
         :return: type
         """
-        if self.long_stock() and self.sell_call_option() and self.is_balance():
+        if self.long_stock() and self.short_call_option() and self.is_balance():
             # covered call
             self.cls_name = CoveredCall
-        elif self.long_stock() and self.buy_put_option() and self.is_balance():
+        elif self.long_stock() and self.long_put_option() and self.is_balance():
             # protective put
             self.cls_name = ProtectivePut
-        elif self.short_stock() and self.buy_call_option() and self.is_balance():
+        elif self.short_stock() and self.long_call_option() and self.is_balance():
             # protective call
             self.cls_name = ProtectiveCall
-        elif self.short_stock() and self.sell_put_option() and self.is_balance():
+        elif self.short_stock() and self.short_put_option() and self.is_balance():
             # covered put
             self.cls_name = CoveredPut
         else:

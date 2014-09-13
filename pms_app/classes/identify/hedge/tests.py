@@ -1,67 +1,105 @@
-import random
+from pms_app.models import Position, PositionStock, PositionOption, PositionSet
 from pms_app.classes.identify.tests import TestReadyUp
-from pms_app import models
-
 from pms_app.classes.identify.hedge import HedgeIdentify
-from pms_app.classes.spreads.hedge import hedge
+from pms_app.classes.spreads import hedge
 
 
 class TestHedgeIdentify(TestReadyUp):
-    def test_all_condition_methods(self):
+    def setUp(self):
+        TestReadyUp.setUp(self)
+
+        self.stock = PositionStock()
+        self.option = PositionOption()
+
+    def stock_cond_method(self, attr, expected):
         """
-        Test all conditions method with related field
+        For test condition methods
         """
-        self.ready_all(key=2)
+        for qty, expect in zip([1, -1], expected):
+            self.stock.quantity = qty
 
-        for position in models.Position.objects.all():
-            stock = models.PositionStock.objects.filter(position=position).first()
-            """:type: PositionStock"""
+            hedge_identify = HedgeIdentify(self.stock, self.option)
+            result = getattr(hedge_identify, attr)()
 
-            option = models.PositionOption.objects.filter(position=position).exclude(quantity=0).first()
-            """:type: PositionOption"""
+            self.assertEqual(result, expect)
 
-            hedge_identify = HedgeIdentify(stock, option)
+            print 'stock quantity: %d' % qty
+            print 'result: %s\n' % result
 
-            # long stock, short stock
-            long_result = hedge_identify.long_stock()
-            short_result = hedge_identify.short_stock()
-            print 'stock quantity: %s, long stock result: %s' \
-                  % (stock.quantity, long_result)
-            print 'stock quantity: %s, short stock result: %s' \
-                  % (stock.quantity, short_result)
+    def test_long_stock(self):
+        """
+        Test is long stock condition
+        """
+        self.stock_cond_method('long_stock', [True, False])
 
-            if stock.quantity > 0:
-                self.assertTrue(long_result)
-                self.assertFalse(short_result)
-            else:
-                self.assertFalse(long_result)
-                self.assertTrue(short_result)
+    def test_short_stock(self):
+        """
+        Test is short stock condition
+        """
+        self.stock_cond_method('short_stock', [False, True])
 
-            # call and put
-            buy_call_result = hedge_identify.buy_call_option()
-            sell_call_result = hedge_identify.sell_call_option()
-            buy_put_result = hedge_identify.buy_put_option()
-            sell_put_result = hedge_identify.sell_put_option()
-            print 'option qty: %s, option: %s' % (option.quantity, option.contract)
-            print 'buy call result: %s' % buy_call_result
-            print 'sell call result: %s' % sell_call_result
-            print 'buy put result: %s' % buy_put_result
-            print 'sell put result: %s\n' % sell_put_result
+    def option_conditions(self, attr, expect_results):
+        """
+        Test is buy call condition
+        """
+        options = [(c, q) for c in ['CALL', 'PUT'] for q in [1, -1]]
+        print options
 
-            if option.contract == 'CALL':
-                if option.quantity > 0:
-                    self.assertTrue(buy_call_result)
-                    self.assertFalse(sell_call_result)
-                else:
-                    self.assertFalse(buy_call_result)
-                    self.assertTrue(sell_call_result)
-            else:
-                if option.quantity > 0:
-                    self.assertTrue(buy_put_result)
-                    self.assertFalse(sell_put_result)
-                else:
-                    self.assertFalse(buy_put_result)
-                    self.assertTrue(sell_put_result)
+        for (contract, quantity), expect in zip(options, expect_results):
+            self.option.contract = contract
+            self.option.quantity = quantity
+
+            hedge_identify = HedgeIdentify(self.stock, self.option)
+            result = getattr(hedge_identify, attr)()
+
+            self.assertEqual(result, expect)
+
+            print 'quantity: %d, contract: %s' % (quantity, contract)
+            print 'result: %s\n' % result
+
+    def test_long_call_option(self):
+        """
+        Test is long call condition
+        """
+        self.option_conditions('long_call_option', [True, False, False, False])
+
+    def test_short_call_option(self):
+        """
+        Test is short call condition
+        """
+        self.option_conditions('short_call_option', [False, True, False, False])
+
+    def test_long_put_option(self):
+        """
+        Test is long put condition
+        """
+        self.option_conditions('long_put_option', [False, False, True, False])
+
+    def test_short_put_option(self):
+        """
+        Test is short put condition
+        """
+        self.option_conditions('short_put_option', [False, False, False, True])
+
+    def test_is_balance(self):
+        """
+        Test both stock and option are in balance quantity
+        """
+        samples = [(100, 1), (100, 2), (200, 2), (300, 1)]
+        expect_results = [True, False, True, False]
+
+        for (stock_qty, option_qty), expect in zip(samples, expect_results):
+            self.stock.quantity = stock_qty
+            self.option.quantity = option_qty
+
+            hedge_identify = HedgeIdentify(self.stock, self.option)
+            result = hedge_identify.is_balance()
+
+            self.assertEqual(result, expect)
+
+            print 'stock quantity: %d' % stock_qty
+            print 'option quantity: %d' % option_qty
+            print 'result: %s\n' % result
 
     def test_get_cls(self):
         """
@@ -69,11 +107,11 @@ class TestHedgeIdentify(TestReadyUp):
         """
         self.ready_all(key=2)
 
-        for position in models.Position.objects.all():
-            stock = models.PositionStock.objects.filter(position=position).first()
+        for position in Position.objects.all():
+            stock = PositionStock.objects.filter(position=position).first()
             """:type: PositionStock"""
 
-            option = models.PositionOption.objects.filter(position=position).first()
+            option = PositionOption.objects.filter(position=position).first()
             """:type: PositionOption"""
 
             hedge_identify = HedgeIdentify(stock, option)
@@ -87,16 +125,4 @@ class TestHedgeIdentify(TestReadyUp):
                  None]
             )
 
-            if cls:
-                print 'current class: %s' % cls.__name__
-
-                inst = cls(stock, option)
-
-                print inst
-
-                for x in random.sample(xrange(-10, 10), 5):
-                    price = inst.break_even.price + x
-                    print 'price: %s, current status: %s' \
-                          % (price, inst.current_status(price))
-
-                print ''
+            print cls(PositionSet(stock.position))

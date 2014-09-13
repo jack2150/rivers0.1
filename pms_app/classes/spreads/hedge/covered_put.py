@@ -5,8 +5,8 @@ class CoveredPut(HedgeContext):
     """
     Covered Put position and calculation
     """
-    def __init__(self, position):
-        HedgeContext.__init__(self, position)
+    def __init__(self, pos_set):
+        HedgeContext.__init__(self, pos_set)
 
         self.name = 'covered_put'
 
@@ -25,7 +25,7 @@ class CoveredPut(HedgeContext):
         # max profit
         self.pl.max_profit.amount = self.calc_max_profit()
         self.pl.max_profit.limit = True
-        self.pl.max_profit.price = float(self._options[0].strike_price)
+        self.pl.max_profit.price = float(self.pos_set.option.strike_price)
         self.pl.max_profit.condition = '<='
 
         # max loss
@@ -39,12 +39,12 @@ class CoveredPut(HedgeContext):
         Calculate then return break even value
         :return: float
         """
-        return float(self._stock.trade_price + self._options[0].trade_price)
+        return float(self.pos_set.stock.trade_price + self.pos_set.option.trade_price)
 
     def calc_max_profit(self):
         """
         Calculate then return max profit
         :return: float
         """
-        return float((self._options[0].strike_price - self._options[0].trade_price
-                      - self._stock.trade_price) * self._stock.quantity)
+        return float((self.pos_set.option.strike_price - self.pos_set.option.trade_price
+                      - self.pos_set.stock.trade_price) * self.pos_set.stock.quantity)
